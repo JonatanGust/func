@@ -44,7 +44,6 @@ power2 n k = n * (power2 (n) (k-1))    --n*(n^(k-1))
 --B
 prop_powers :: Integer -> Integer -> Bool
 prop_powers n k = (power1 n k' == power2 n k')&&(power1 n k' == power n k')
-    where k' = abs(k) -- <- part D
 
 --C - test the things from A
 test_powers :: Bool
@@ -52,4 +51,11 @@ test_powers = (prop_powers (-3) 5)&&(prop_powers (-1) 0)&&
                 (prop_powers 0 5)&&(prop_powers 2 6)&&(prop_powers 2 5)
 
 --D
---See where clause of prop_powers and import of QC
+prop_powers' :: Integer -> Integer -> Bool
+prop_powers' n k = (power1 n k' == power2 n k')&&(power1 n k' == power n k')
+    where k' = abs(k) -- <- part D
+{-
+    import of QC
+    We havn't defined our functions for negative exponents (just like the
+    given function) and thus we exlude those cases from our test.
+-}
