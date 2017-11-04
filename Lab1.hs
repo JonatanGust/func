@@ -21,7 +21,7 @@ power n k = n * power n (k-1)
 power1 :: Integer -> Integer -> Integer
 power1 n k | k < 0 = error "power: negative argument"
 power1 n 0 = 1
-power1 n k = product(replicate (fromInteger k) (fromInteger n))
+power1 n k = product(replicate (fromInteger k) n)
 
 
 --Part 3
@@ -43,7 +43,7 @@ power2 n k = n * (power2 (n) (k-1))    --n*(n^(k-1))
 
 --B
 prop_powers :: Integer -> Integer -> Bool
-prop_powers n k = (power1 n k' == power2 n k')&&(power1 n k' == power n k')
+prop_powers n k = (power1 n k == power2 n k)&&(power1 n k == power n k)
 
 --C - test the things from A
 test_powers :: Bool
@@ -52,7 +52,7 @@ test_powers = (prop_powers (-3) 5)&&(prop_powers (-1) 0)&&
 
 --D
 prop_powers' :: Integer -> Integer -> Bool
-prop_powers' n k = (power1 n k' == power2 n k')&&(power1 n k' == power n k')
+prop_powers' n k = prop_powers n k'
     where k' = abs(k) -- <- part D
 {-
     import of QC
