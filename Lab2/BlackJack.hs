@@ -58,3 +58,4 @@ winner h1 h2 | gameOver h1 = Bank
 winner h1 h2 | value h1 > value h2 = Guest
 winner h1 h2 | otherwise = Bank
 
+
