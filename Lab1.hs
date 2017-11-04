@@ -43,7 +43,7 @@ power2 n k = n * (power2 (n) (k-1))    --n*(n^(k-1))
 
 --B
 prop_powers :: Integer -> Integer -> Bool
-prop_powers n k = (power1 n k' == power2 n k')&&(power1 n k' == power n k')
+prop_powers n k = (power1 n k == power2 n k)&&(power1 n k== power n k)
 
 --C - test the things from A
 test_powers :: Bool
