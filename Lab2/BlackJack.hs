@@ -52,7 +52,6 @@ numberOfAces Empty = 0
 numberOfAces (Add (Card r s) hand) | r == Ace = 1 + numberOfAces hand
 numberOfAces (Add card hand) = numberOfAces hand
 
-
 --Returns true if Hand value is over 21
 gameOver :: Hand -> Bool
 gameOver hand = value hand > 21
