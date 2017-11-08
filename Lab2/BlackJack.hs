@@ -11,10 +11,6 @@ size hand2
   = 2
 -}
 
---Hand w/ val 13
-exh = (Add (Card (Numeric 2) Hearts) (Add (Card Jack Spades)
-        (Add (Card Ace Spades) Empty) ))
-
 --Returns the empty hand
 empty :: Hand
 empty = Empty
@@ -46,7 +42,6 @@ numberOfAces Empty = 0
 numberOfAces (Add (Card r s) hand) | r == Ace = 1 + numberOfAces hand
 numberOfAces (Add card hand) = numberOfAces hand
 
-
 --Returns true if Hand value is over 21
 gameOver :: Hand -> Bool
 gameOver hand = value hand > 21
@@ -56,5 +51,3 @@ winner :: Hand -> Hand -> Player
 winner h1 h2 | gameOver h1 = Bank
 winner h1 h2 | value h1 > value h2 = Guest
 winner h1 h2 | otherwise = Bank
-
-
