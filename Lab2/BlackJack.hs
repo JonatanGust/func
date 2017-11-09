@@ -65,6 +65,11 @@ winner :: Hand -> Hand -> Player
 winner h1 h2 | (value h1 > value h2) && not(gameOver h1) = Guest
 winner h1 h2 | otherwise = Bank
 
+
+------------------- Part A Above, Part B Below --------------
+
+
+--Returns the first Hand ontop of the second Hand
 (<+) :: Hand -> Hand -> Hand
 (<+) hand Empty = hand
 (<+) Empty hand = hand
@@ -77,6 +82,7 @@ prop_onTopOf_assoc p1 p2 p3 =
 prop_size_onTopOf :: Hand -> Hand -> Bool
 prop_size_onTopOf h1 h2 = size h1 + size h2 == size(h1 <+ h2)
 
+--Returns the Hand containing all cards of all suits (not shuffled)
 fullDeck :: Hand
 fullDeck = (fullSuit Spades 2) <+ (fullSuit Hearts 2)
            <+ (fullSuit Diamonds 2) <+ (fullSuit Clubs 2)
@@ -84,35 +90,40 @@ fullDeck = (fullSuit Spades 2) <+ (fullSuit Hearts 2)
 --Call w/ desired Suit and 2 to create hand of full suit
 fullSuit :: Suit -> Integer -> Hand
 fullSuit suit 1 = Empty
---fullSuit suit i | i>14 || i<1 = Error "Call to fullSuit done w/ bad number, use 2"
 fullSuit suit i | i<11 = Add (Card (Numeric i) suit) (fullSuit suit (i+1))
 fullSuit suit 11 = Add (Card Jack suit) (fullSuit suit (12))
 fullSuit suit 12 = Add (Card Queen suit) (fullSuit suit (13))
 fullSuit suit 13 = Add (Card King suit) (fullSuit suit (14))
 fullSuit suit 14 = Add (Card Ace suit) (fullSuit suit (1))
 
-
+--Takes the first card from the Deck (first Hand) and ads it to the second
+--  Hand, returns (Deck, Hand)
 draw :: Hand -> Hand -> (Hand,Hand)
 draw Empty _ = error "draw: The deck is empty."
 draw (Add cD hD) hP = (hD, (Add cD Empty) <+ hP)
 
+--Makes the bank play the game with the given deck (Hand)
 playBank :: Hand -> Hand
 playBank deck = playBank' deck empty
 
+--Helper function that does all the recursions (playBank initiates it)
 playBank' :: Hand -> Hand -> Hand
 playBank' deck hand | value hand >= 16 = hand
 playBank' deck hand = playBank' deck' hand'
   where (deck', hand') = draw deck hand
 
+--Shuffles the order of the cards in Hand (first card given by StdGen)
 shuffle :: StdGen -> Hand -> Hand
 shuffle g Empty = Empty
 shuffle g h = pickCard r h <+ shuffle g1 (removeCard r h)
     where (r, g1) = randomR(1, size h) g
 
+--Returns the n'th (Integer) card in the Hand
 pickCard :: Integer -> Hand -> Hand
 pickCard 1 (Add card hand) = (Add card Empty)
 pickCard n (Add card hand) = pickCard (n-1) hand
 
+--Returns the Hand without the n'th (Integer) card
 removeCard :: Integer -> Hand -> Hand
 removeCard 1 (Add card hand) = hand
 removeCard n (Add card hand) = (Add card Empty) <+ removeCard (n-1) hand
