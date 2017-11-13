@@ -29,14 +29,29 @@ example =
 
 -- | allBlankSudoku is a sudoku with just blanks
 allBlankSudoku :: Sudoku
-allBlankSudoku = undefined
+allBlankSudoku = Sudoku (9 `replicate` (9 `replicate` n))
+    where n = Nothing
 
 -- * A2
 
 -- | isSudoku sud checks if sud is really a valid representation of a sudoku
--- puzzle
+-- puzzle 9x9 and 1-9
 isSudoku :: Sudoku -> Bool
-isSudoku = undefined
+isSudoku s = length s == 9 && isRowsOk s
+
+--isRowsOk :: Sudoku -> Bool
+--isRowsOk [] = True
+--isRowsOk x:xs = (length x == 9) && isElementsOk x && (isRowsOk xs)
+
+--isElementsOk :: [Maybe Int] -> Bool
+--isElementsOk [] = True
+--isElementsOk x:xs = x  `elem` [1..9]:Nothing && isElementsOk xs
+
+--isRowLength :: [a] -> Bool
+--isRowLength s = length s == 9
+--
+--isColumnLen :: Sudoku -> Bool
+--isColumnLen x:xs =
 
 -- * A3
 
