@@ -37,15 +37,27 @@ allBlankSudoku = Sudoku (9 `replicate` (9 `replicate` n))
 -- | isSudoku sud checks if sud is really a valid representation of a sudoku
 -- puzzle 9x9 and 1-9
 isSudoku :: Sudoku -> Bool
-isSudoku s = length s == 9 && isRowsOk s
+isSudoku s = length (rows s) == 9 && isRowsOk s
 
---isRowsOk :: Sudoku -> Bool
---isRowsOk [] = True
---isRowsOk x:xs = (length x == 9) && isElementsOk x && (isRowsOk xs)
+isRowsOk :: Sudoku -> Bool
+isRowsOk (Sudoku []) = True
+isRowsOk s = (length x == 9) && isElementsOk x && (isRowsOk (Sudoku xs))
+    where (x:xs) = (rows s)
 
---isElementsOk :: [Maybe Int] -> Bool
---isElementsOk [] = True
---isElementsOk x:xs = x  `elem` [1..9]:Nothing && isElementsOk xs
+isElementsOk :: [Maybe Int] -> Bool
+isElementsOk [] = True
+isElementsOk (x:xs) = x `elem` [ Just 1
+                               , Just 2
+                               , Just 3
+                               , Just 4
+                               , Just 5
+                               , Just 6
+                               , Just 7
+                               , Just 8
+                               , Just 9
+                               , Nothing
+                               ]
+                       && isElementsOk xs
 
 --isRowLength :: [a] -> Bool
 --isRowLength s = length s == 9
