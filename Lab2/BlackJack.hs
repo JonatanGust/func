@@ -2,6 +2,7 @@ module BlackJack where
 import Cards
 import RunGame
 import System.Random
+import Test.QuickCheck hiding (shuffle)
 
 {-
 size hand2
@@ -62,8 +63,9 @@ gameOver hand = value hand > 21
 
 --Returns the winner of two Hands, in order Guest, Bank
 winner :: Hand -> Hand -> Player
-winner h1 h2 | (value h1 > value h2) && not(gameOver h1) = Guest
-winner h1 h2 | otherwise = Bank
+winner h1 h2  | not(gameOver h1)
+                && ((gameOver h2) || (value h1 > value h2)) = Guest
+              | otherwise = Bank
 
 
 ------------------- Part A Above, Part B Below --------------
@@ -112,7 +114,9 @@ playBank' deck hand | value hand >= 16 = hand
 playBank' deck hand = playBank' deck' hand'
   where (deck', hand') = draw deck hand
 
+
 --Shuffles the order of the cards in Hand (first card given by StdGen)
+
 shuffle :: StdGen -> Hand -> Hand
 shuffle g Empty = Empty
 shuffle g h = pickCard r h <+ shuffle g1 (removeCard r h)
