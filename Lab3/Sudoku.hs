@@ -1,4 +1,4 @@
-
+import Data.Char
 import Test.QuickCheck
 
 -------------------------------------------------------------------------
@@ -89,6 +89,7 @@ printSudoku s = do putStr (getSudokuStr s)
 
 
 getSudokuStr :: Sudoku -> String
+getSudokuStr (Sudoku []) = ""
 getSudokuStr s = (getRowStr x) ++"\n"++ getSudokuStr(Sudoku xs)
             where (x:xs) = (rows s)
 
@@ -103,17 +104,25 @@ getRowStr (x:xs) = "." ++ getRowStr xs
 -- | readSudoku file reads from the file, and either delivers it, or stops
 -- if the file did not contain a sudoku
 readSudoku :: FilePath -> IO Sudoku
-readSudoku path = do text <- readFile path
+readSudoku path = do sudtext <- readFile path
+                     let sud = createSudoku sudtext
+                     if not (isSudoku sud)
+                     then error "Not a sudoku"
+                     else return sud
 
-createSudoku :: String -> [[Maybe Int]]
-createSudoku str = (take 9 str): createSudokuList [(drop 11)]
+
+
+createSudoku :: String -> Sudoku--[[Maybe Int]]
+createSudoku str = Sudoku (map createIntList (createSudokuList str))
 
 createSudokuList :: String -> [String]
-createSudokuList "" = [""]
-createSudokuList [str] = (take 9 str): (take 1 createSudokuList (drop 11 str))
+createSudokuList "" = []
+createSudokuList str = (take 9 str): (createSudokuList(drop 10 str))
 
---createIntList :: [String] -> [[Maybe Int]]
---createIntList str =
+createIntList :: String -> [Maybe Int]
+createIntList [] = []
+createIntList (x:xs) | x == '.' = (Nothing):(createIntList xs)
+                     | otherwise = (Just (digitToInt x)):(createIntList xs)
 
 -------------------------------------------------------------------------
 
