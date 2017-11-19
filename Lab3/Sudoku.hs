@@ -1,4 +1,5 @@
 import Data.Char
+import Data.List
 import Test.QuickCheck
 
 -------------------------------------------------------------------------
@@ -158,3 +159,77 @@ prop_Sudoku :: Sudoku -> Bool
 prop_Sudoku s = isSudoku s
 
 -------------------------------------------------------------------------
+
+-- * D1
+
+type Block = [Maybe Int]
+
+isOkayBlock :: Block -> Bool
+isOkayBlock [] = False
+isOkayBlock b = isElementsOk b (Nothing:(map Just [1..9]))
+                && noDuplicates b []
+
+noDuplicates :: Block -> Block -> Bool
+noDuplicates [] _ = True
+noDuplicates (x:xs) y = if  (x /= Nothing) && (x `elem` y)
+                        then False
+                        else noDuplicates xs (x:y)
+
+blocks :: Sudoku -> [Block]
+blocks (Sudoku s) = concat [s,colsBlocks s,squareBlocks s]
+
+colsBlocks :: [Block] -> [Block]
+colsBlocks s = transpose s
+
+squareBlocks :: [Block] -> [Block]
+squareBlocks [] = []
+squareBlocks s = concat (makeSquare (take 3 s)
+                        : [squareBlocks (drop 3 s)])
+
+makeSquare :: [Block] -> [Block]
+makeSquare [[],[],[]] = []
+makeSquare [a,b,c] = concat(map (take 3) [a,b,c])
+                     : makeSquare(map (drop 3) [a,b,c])
+makeSquare _ = error "Bad block!"
+
+prop_Enough_Blocks :: Sudoku -> Bool
+prop_Enough_Blocks (Sudoku s) = (length (blocks (Sudoku s))) == 27
+                                && recLength (blocks (Sudoku s))
+
+recLength :: [Block] -> Bool
+recLength [] = True
+recLength (x:xs) = (length x) == 9
+                   && recLength xs
+
+
+
+
+
+
+
+
+
+
+exB :: [Block]
+exB = [ [j 3,j 6,n  ,n  ,j 7,j 1,j 2,n  ,n  ]
+        , [n  ,j 5,n  ,n  ,n  ,n  ,j 1,j 8,n  ]
+        , [n  ,n  ,j 9,j 2,n  ,j 4,j 7,n  ,n  ]
+        , [n  ,n  ,n  ,n  ,j 1,j 3,n  ,j 2,j 8]
+        , [j 4,n  ,n  ,j 5,n  ,j 2,n  ,n  ,j 9]
+        , [j 2,j 7,n  ,j 4,j 6,n  ,n  ,n  ,n  ]
+        , [n  ,n  ,j 5,j 3,n  ,j 8,j 9,n  ,n  ]
+        , [n  ,j 8,j 3,n  ,n  ,n  ,n  ,j 6,n  ]
+        , [n  ,n  ,j 7,j 6,j 9,n  ,n  ,j 4,j 3]
+        ]
+        where
+            n = Nothing
+            j = Just
+
+exB1 :: [Block]
+exB1 = [ [j 3,j 6,n  ,n  ,j 7,j 1,j 2,n  ,n  ]
+       , [n  ,j 5,n  ,n  ,n  ,n  ,j 1,j 8,n  ]
+       , [n  ,n  ,j 9,j 2,n  ,j 4,j 7,n  ,n  ]
+       ]
+       where
+            n = Nothing
+            j = Just
