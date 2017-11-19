@@ -130,7 +130,18 @@ createIntList (x:xs) | x == '.' = (Nothing):(createIntList xs)
 
 -- | cell generates an arbitrary cell in a Sudoku
 cell :: Gen (Maybe Int)
-cell = undefined
+cell = frequency [(2,rMaybeInt),(8, elements [Nothing])]
+
+rMaybeInt :: Gen (Maybe Int)
+rMaybeInt = do n <- rNum
+               return (Just n)
+
+rNum :: Gen Int
+rNum = elements [ n|n<-[1..9]]
+
+--genNothing :: Gen (Maybe Int)
+--genNothing = elements [Nothing]
+
 
 
 -- * C2
@@ -140,5 +151,10 @@ instance Arbitrary Sudoku where
   arbitrary =
     do rows <- vectorOf 9 (vectorOf 9 cell)
        return (Sudoku rows)
+
+-- * C3
+
+prop_Sudoku :: Sudoku -> Bool
+prop_Sudoku s = isSudoku s
 
 -------------------------------------------------------------------------
