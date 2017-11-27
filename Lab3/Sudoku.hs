@@ -273,7 +273,10 @@ solve s = if (isOkay s && isSudoku s)
           then solve'
           else Nothing
 
-solve' :: Sudoku -> Just Sudoku
-solve' s = 
+solve' :: Sudoku -> Maybe Sudoku
+solve' s | isFilled s = Just s
+solve' s = update s (head (head sblank) head sCand)
+            where sblank = blanks s
+                  sCand  = (candidates s (head sblank))
 
 
