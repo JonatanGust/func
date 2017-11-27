@@ -248,9 +248,8 @@ prop_update (Sudoku s) p m = isOkay (Sudoku s2)
                             && (s2 !! (fst p)) !! (snd p) == m
                 where (Sudoku s2) = (update (Sudoku s) p m)
 
-
 candidates :: Sudoku -> Pos -> [Int]
-candidates s (r,c) = ([1..9] \\ (map fromJust (delete Nothing (nub taken))))
+candidates s (r,c) = [1..9] \\ (map fromJust (delete Nothing (nub taken)))
               where blockList = blocks s
                     boxCol = c `quot` 3
                     boxRow = r `quot` 3
@@ -270,4 +269,6 @@ helpPropCandi s p (x:xs) = isSudoku s2 && isOkay s2 && (helpPropCandi s p xs)
 
 
 --solve :: Sudoku -> Maybe Sudoku
+
+
 
