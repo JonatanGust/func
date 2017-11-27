@@ -269,3 +269,5 @@ helpPropCandi s p (x:xs) = isSudoku s2 && isOkay s2 && (helpPropCandi s p xs)
                 where s2 = update s p (Just x)
 
 
+--solve :: Sudoku -> Maybe Sudoku
+
