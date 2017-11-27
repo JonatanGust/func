@@ -19,7 +19,7 @@ example =
       , [n  ,n  ,j 9,j 2,n  ,j 4,j 7,n  ,n  ]
       , [n  ,n  ,n  ,n  ,j 1,j 3,n  ,j 2,j 8]
       , [j 4,n  ,n  ,j 5,n  ,j 2,n  ,n  ,j 9]
-      , [j 2,j 7,n  ,j 4,j 6,n  ,n  ,n  ,n  ]
+      , [j 2,j 7,n  ,j 4,j 6,n  ,n  ,n  ,n  ]--
       , [n  ,n  ,j 5,j 3,n  ,j 8,j 9,n  ,n  ]
       , [n  ,j 8,j 3,n  ,n  ,n  ,n  ,j 6,n  ]
       , [n  ,n  ,j 7,j 6,j 9,n  ,n  ,j 4,j 3]
@@ -134,7 +134,9 @@ rNum = elements [ n|n<-[1..9]]
 instance Arbitrary Sudoku where
   arbitrary =
     do rows <- vectorOf 9 (vectorOf 9 cell)
-       return (Sudoku rows)
+       if isOkay (Sudoku rows)
+       then return (Sudoku rows)
+       else arbitrary
 
 -- * C3
 
@@ -226,11 +228,13 @@ prop_isblanks (Sudoku ss)=
 
 (!!=) :: [a] -> (Int,a) -> [a]
 (!!=) [] _ = error "List is empty"
-(!!=) xs (n,_) | n < 0 && length(xs) <= n = error "Illegal index"
+(!!=) xs (n,_) | n < 0 || length(xs) <= n = error "Illegal index"
 (!!=) (x:xs) (0,a) = a:xs
 (!!=) (x:xs) (n,a) = x:((!!=) xs ((n-1),a))
 
-prop_insert :: (Eq a) => [a] -> (Int,a) -> Bool
+prop_insert :: [Maybe Int] -> (Int,Maybe Int) -> Bool
+prop_insert [] _ = True
+prop_insert xs (n,_) | n < 0 || length(xs) <= n = True
 prop_insert a (n,b) = (length a2 == length a)
                       && ((a2 !! n) == b)
                     where a2 = (a !!= (n,b))
@@ -246,7 +250,7 @@ prop_update (Sudoku s) p m = isOkay (Sudoku s2)
 
 
 candidates :: Sudoku -> Pos -> [Int]
-candidates s (r,c) = ([1..9] \\ (map fromJust (delete Nothing taken)))
+candidates s (r,c) = ([1..9] \\ (map fromJust (delete Nothing (nub taken))))
               where blockList = blocks s
                     boxCol = c `quot` 3
                     boxRow = r `quot` 3
@@ -255,5 +259,13 @@ candidates s (r,c) = ([1..9] \\ (map fromJust (delete Nothing taken)))
                           `union` (blockList !! (c + 9))
                           `union` (blockList !! r)
 
+prop_candi :: Sudoku -> Pos -> Bool
+prop_candi s p = helpPropCandi s p1 (candidates s p1)
+        where p1 = (abs((fst p) `mod` 8),abs ((snd p) `mod` 8))
+
+helpPropCandi :: Sudoku -> Pos -> [Int] -> Bool
+helpPropCandi _ _ [] = True
+helpPropCandi s p (x:xs) = isSudoku s2 && isOkay s2 && (helpPropCandi s p xs)
+                where s2 = update s p (Just x)
 
 
