@@ -1,5 +1,7 @@
 import Data.Char
 import Data.List
+import Data.Int
+import Data.Maybe hiding (isNothing)
 import Test.QuickCheck
 
 -------------------------------------------------------------------------
@@ -13,7 +15,7 @@ example :: Sudoku
 example =
     Sudoku
       [ [j 3,j 4,n  ,n  ,j 7,j 1,j 2,n  ,n  ]
-      , [n  ,j 5,n  ,n  ,n  ,n  ,j 1,j 8,n  ]
+      , [n  ,j 5,n  ,n  ,n  ,n  ,j 8,j 8,n  ]
       , [n  ,n  ,j 9,j 2,n  ,j 4,j 7,n  ,n  ]
       , [n  ,n  ,n  ,n  ,j 1,j 3,n  ,j 2,j 8]
       , [j 4,n  ,n  ,j 5,n  ,j 2,n  ,n  ,j 9]
@@ -119,7 +121,7 @@ createIntList (x:xs) | x == '.' = (Nothing):(createIntList xs)
 -- | cell generates an arbitrary cell in a Sudoku
 cell :: Gen (Maybe Int)
 cell = do n <- rNum
-          x <- (frequency [(2,elements [Just n]),(8, elements [Nothing])])
+          x <- (frequency [(2,elements [Just n]),(8, return Nothing)])--elements [Nothing])])
           return x
 
 --Generates a random integer between 1-9
@@ -197,3 +199,61 @@ recLength (x:xs) = (length x) == 9
 --Checks if a sudoku follows all rules
 isOkay :: Sudoku -> Bool
 isOkay s = and (map isOkayBlock (blocks s))
+
+------------------------------------ E --------------------------------------
+
+
+type Pos = (Int,Int)
+
+posList :: [Pos]
+posList = [(x,y) | x <- [0..8], y <- [0..8]]
+--
+--isOneOne :: Pos -> Bool
+--isOneOne (1,1) = True
+--isOneOne _ = False
+
+blanks :: Sudoku -> [Pos]
+blanks (Sudoku s) = map snd (filter (isNothing) (zip (concat s) posList))
+
+isNothing :: (Maybe Int, Pos) -> Bool
+isNothing (Nothing, _) = True
+isNothing _ = False
+
+prop_isblanks :: Sudoku -> Bool
+prop_isblanks (Sudoku ss)=
+                 and[((ss !! (fst p)) !! (snd p) ) == Nothing | p <- ps ]
+                 where ps = blanks (Sudoku ss)
+
+(!!=) :: [a] -> (Int,a) -> [a]
+(!!=) [] _ = error "List is empty"
+(!!=) xs (n,_) | n < 0 && length(xs) <= n = error "Illegal index"
+(!!=) (x:xs) (0,a) = a:xs
+(!!=) (x:xs) (n,a) = x:((!!=) xs ((n-1),a))
+
+prop_insert :: (Eq a) => [a] -> (Int,a) -> Bool
+prop_insert a (n,b) = (length a2 == length a)
+                      && ((a2 !! n) == b)
+                    where a2 = (a !!= (n,b))
+
+update :: Sudoku -> Pos -> Maybe Int -> Sudoku
+update (Sudoku s) p m =
+                    Sudoku (s !!= (fst p, ((s !! (fst p)) !!= ((snd p),m))))
+
+prop_update :: Sudoku -> Pos -> Maybe Int -> Bool
+prop_update (Sudoku s) p m = isOkay (Sudoku s2)
+                            && (s2 !! (fst p)) !! (snd p) == m
+                where (Sudoku s2) = (update (Sudoku s) p m)
+
+
+candidates :: Sudoku -> Pos -> [Int]
+candidates s (r,c) = ([1..9] \\ (map fromJust (delete Nothing taken)))
+              where blockList = blocks s
+                    boxCol = c `quot` 3
+                    boxRow = r `quot` 3
+                    boxIndex = 18 + (3 * boxRow) + boxCol
+                    taken = (blockList !! (boxIndex))
+                          `union` (blockList !! (c + 9))
+                          `union` (blockList !! r)
+
+
+
