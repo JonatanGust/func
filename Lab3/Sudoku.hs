@@ -246,7 +246,7 @@ prop_update (Sudoku s) p m = isOkay (Sudoku s2)
 
 
 candidates :: Sudoku -> Pos -> [Int]
-candidates s (r,c) = ([1..9] \\ (map fromJust (delete Nothing taken)))
+candidates s (r,c) = [1..9] \\ (map fromJust (delete Nothing (nub taken)))
               where blockList = blocks s
                     boxCol = c `quot` 3
                     boxRow = r `quot` 3
@@ -254,6 +254,8 @@ candidates s (r,c) = ([1..9] \\ (map fromJust (delete Nothing taken)))
                     taken = (blockList !! (boxIndex))
                           `union` (blockList !! (c + 9))
                           `union` (blockList !! r)
+
+
 
 
 
