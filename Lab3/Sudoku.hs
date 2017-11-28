@@ -10,16 +10,16 @@ import Test.QuickCheck
 data Sudoku = Sudoku { rows :: [[Maybe Int]] }
  deriving ( Show, Eq )
 
--- | A sample sudoku puzzle
+--An example sudoku
 example :: Sudoku
 example =
     Sudoku
-      [ [j 3,j 4,n  ,n  ,j 7,j 1,j 2,n  ,n  ]
-      , [n  ,j 5,n  ,n  ,n  ,n  ,j 8,j 8,n  ]
+      [ [j 3,j 6,n  ,n  ,j 7,j 1,j 2,n  ,n  ]
+      , [n  ,j 5,n  ,n  ,n  ,n  ,j 1,j 8,n  ]
       , [n  ,n  ,j 9,j 2,n  ,j 4,j 7,n  ,n  ]
       , [n  ,n  ,n  ,n  ,j 1,j 3,n  ,j 2,j 8]
       , [j 4,n  ,n  ,j 5,n  ,j 2,n  ,n  ,j 9]
-      , [j 2,j 7,n  ,j 4,j 6,n  ,n  ,n  ,n  ]--
+      , [j 2,j 7,n  ,j 4,j 6,n  ,n  ,n  ,n  ]
       , [n  ,n  ,j 5,j 3,n  ,j 8,j 9,n  ,n  ]
       , [n  ,j 8,j 3,n  ,n  ,n  ,n  ,j 6,n  ]
       , [n  ,n  ,j 7,j 6,j 9,n  ,n  ,j 4,j 3]
@@ -62,6 +62,7 @@ isElementsOk (x:xs) a = x `elem`  a
 -- i.e. there are no blanks
 -- can check if no nothing instead
 isFilled :: Sudoku -> Bool
+isFilled (Sudoku []) = True
 isFilled s = isElementsOk x (map Just [1..9]) && isFilled(Sudoku xs)
         where (x:xs) = (rows s)
 
@@ -270,13 +271,25 @@ helpPropCandi s p (x:xs) = isSudoku s2 && isOkay s2 && (helpPropCandi s p xs)
 
 solve :: Sudoku -> Maybe Sudoku
 solve s = if (isOkay s && isSudoku s)
-          then solve'
+          then solve' s
           else Nothing
 
+--runs through all possible solutions, doesn't stop when a solution is found
 solve' :: Sudoku -> Maybe Sudoku
-solve' s | isFilled s = Just s
-solve' s = update s (head (head sblank) head sCand)
-            where sblank = blanks s
-                  sCand  = (candidates s (head sblank))
-
+solve' s | isFilled s            = Just s
+         | length sCand == 0     = Nothing
+         | length solutions == 0 = Nothing
+         | otherwise             = head solutions
+            where -- list of Pos that are empty in s
+                  sblank         = blanks s
+                  --list of maybe ints
+                  sCand          = map Just (candidates s (head sblank))
+                  --list of all possible sudokus (using sCand for the first
+                  --blank pos
+                  possibleSuds   = (map (update s ((head sblank) )) sCand)
+                  --list of recursivly solved sudokus or nothing if no
+                  --soluiton
+                  solvedPosSuds  = (map solve' possibleSuds)
+                  --list of only sudoku, if empty no solution was found
+                  solutions      = delete Nothing (nub solvedPosSuds)
 
