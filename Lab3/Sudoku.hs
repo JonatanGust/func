@@ -208,31 +208,37 @@ isOkay s = and (map isOkayBlock (blocks s))
 
 type Pos = (Int,Int)
 
+--A list of all possible Pos in a sudoku
 posList :: [Pos]
 posList = [(x,y) | x <- [0..8], y <- [0..8]]
---
---isOneOne :: Pos -> Bool
---isOneOne (1,1) = True
---isOneOne _ = False
 
+--Returns a list of Pos of all blanks in the sudoku
 blanks :: Sudoku -> [Pos]
 blanks (Sudoku s) = map snd (filter (isNothing) (zip (concat s) posList))
 
+--Help func for blanks, checks if the maybe int is Nothing
 isNothing :: (Maybe Int, Pos) -> Bool
 isNothing (Nothing, _) = True
 isNothing _ = False
 
+--property of blanks, checks that all Pos given by blanks for sudoku is
+--Nothing
 prop_isblanks :: Sudoku -> Bool
-prop_isblanks (Sudoku ss)=
-                 and[((ss !! (fst p)) !! (snd p) ) == Nothing | p <- ps ]
+prop_isblanks (Sudoku ss) = and[((ss !! (fst p)) !! (snd p) )
+                                == Nothing | p <- ps ]
                  where ps = blanks (Sudoku ss)
 
+--Replaces the specified element in the list [a] with the given element a
+--int is the index of the element to be replaced returns the list with the
+--new element in place of old
 (!!=) :: [a] -> (Int,a) -> [a]
 (!!=) [] _ = error "List is empty"
 (!!=) xs (n,_) | n < 0 || length(xs) <= n = error "Illegal index"
 (!!=) (x:xs) (0,a) = a:xs
 (!!=) (x:xs) (n,a) = x:((!!=) xs ((n-1),a))
 
+--Test the property of replaceby checking length of list is the same and that
+--the element at index after replace is replaced with the given element
 prop_insert :: [Maybe Int] -> (Int,Maybe Int) -> Bool
 prop_insert [] _ = True
 prop_insert xs (n,_) | n < 0 || length(xs) <= n = True
@@ -240,15 +246,20 @@ prop_insert a (n,b) = (length a2 == length a)
                       && ((a2 !! n) == b)
                     where a2 = (a !!= (n,b))
 
+--Updates the sudoku with the given int at the given pos, returns updated sud
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
 update (Sudoku s) p m =
                     Sudoku (s !!= (fst p, ((s !! (fst p)) !!= ((snd p),m))))
 
+--Test the property of update, we could do this much more thurogly but for
+--now we simply test that the new element is in the right place and that
+--the sudoku isn't broken by the function
 prop_update :: Sudoku -> Pos -> Maybe Int -> Bool
 prop_update (Sudoku s) p m = isOkay (Sudoku s2)
                             && (s2 !! (fst p)) !! (snd p) == m
                 where (Sudoku s2) = (update (Sudoku s) p m)
 
+--Retrieves the possible numbers for the specified Pos for the given sudoku
 candidates :: Sudoku -> Pos -> [Int]
 candidates s (r,c) = [1..9] \\ (map fromJust (delete Nothing (nub taken)))
               where blockList = blocks s
@@ -259,19 +270,22 @@ candidates s (r,c) = [1..9] \\ (map fromJust (delete Nothing (nub taken)))
                           `union` (blockList !! (c + 9))
                           `union` (blockList !! r)
 
+--Test the property of candidates, by inserting every given value in the spot
+--to verify that the candidate is valid
 prop_candi :: Sudoku -> Pos -> Bool
 prop_candi s p = helpPropCandi s p1 (candidates s p1)
         where p1 = (abs((fst p) `mod` 8),abs ((snd p) `mod` 8))
-
+--Recursive helper function of prop_candi
 helpPropCandi :: Sudoku -> Pos -> [Int] -> Bool
 helpPropCandi _ _ [] = True
 helpPropCandi s p (x:xs) = isSudoku s2 && isOkay s2 && (helpPropCandi s p xs)
                 where s2 = update s p (Just x)
 
-
+--Solves the given sudoku and returns the solution,
+--Nothing is given if unsolvable
 solve :: Sudoku -> Maybe Sudoku
 solve s = if (isOkay s && isSudoku s)
-          then solve'' s
+          then solve''' s
           else Nothing
 
 --runs through all possible solutions, doesn't stop when a solution is found
@@ -293,6 +307,7 @@ solve' s | isFilled s            = Just s
                   --list of only sudoku, if empty no solution was found
                   solutions      = delete Nothing (nub solvedPosSuds)
 
+--Runs trhough all possible solutions untill a solution is found
 solve'' :: Sudoku -> Maybe Sudoku
 solve'' s | isFilled s                   = Just s
           | length sCand == 0     = Nothing
@@ -301,31 +316,69 @@ solve'' s | isFilled s                   = Just s
                    sblankPos      = head $ blanks s
                    --list of maybe ints
                    sCand          = map Just (candidates s sblankPos)
-
-
+--Recursive helpfunc for solve''
 helpSolve'' :: Sudoku -> Pos -> [Maybe Int] -> Maybe Sudoku
-helpSolve'' s p [] = Nothing
+helpSolve'' s p []      = Nothing
 helpSolve'' s p (x:xs)  = if solved == Nothing
                           then helpSolve'' s p xs
                           else solved
                 where solved = solve'' (update s p x)
 
+--Runs trhough all possible solutions but fills in the spaces with lowest
+--amount of possible numbers first
+solve''' :: Sudoku -> Maybe Sudoku
+solve''' s  | isFilled s            = Just s
+            | length sBestCand == 0 = Nothing
+            | otherwise             = helpSolve''' s sBestPos sBestCand
+               where -- list of Pos that are empty in s
+                     sBlanks   = blanks s
+                     --list of maybe ints
+                     --sCand     = map (candidates s ) sBlanks
+                     --one of the touples with shortest candidate list
+                     sBestPos  = getBestPos s sBlanks
+                     --candidate list for best pos
+                     sBestCand = map Just (candidates s sBestPos)
+--Helper func that retrives one of the Pos with fewest candidates for solve'''
+getBestPos :: Sudoku -> [Pos] -> Pos
+getBestPos s (x:xs) = getBestPos' s xs x
+--Recursive step of ^
+getBestPos' :: Sudoku -> [Pos] -> Pos -> Pos
+getBestPos' _ [] x = x
+getBestPos' s (y:ys) x  = if length (candidates s x) == 0
+                          then x
+                          else if length (candidates s x)
+                                  < length (candidates s y)
+                               then getBestPos' s ys x
+                               else getBestPos' s ys y
+--Recursive helpfunction of solve''', identical to helpSolve''
+helpSolve''' :: Sudoku -> Pos -> [Maybe Int] -> Maybe Sudoku
+helpSolve''' s p [] = Nothing
+helpSolve''' s p (x:xs)  = if solved == Nothing
+                          then helpSolve''' s p xs
+                          else solved
+                where solved = solve''' (update s p x)
+
+--Tries to read the sudoku in the file and then tries to solve it,
+--printing the result
 readAndSolve :: FilePath -> IO ()
 readAndSolve fp = do sud <- readSudoku(fp)
                      let solved = solve sud
                      if solved == Nothing
                      then print "No solution"
-                     else printSudoku (fromJust (solve sud))
+                     else printSudoku (fromJust solved)
 
+--Property function of solve, checks that the given solution is a
+--solution for the given base, Solution -> Base
 isSolutionOf :: Sudoku -> Sudoku -> Bool
 isSolutionOf s1 s2 = (isFilled s1) && (isOkay s1)
                      && (isOkay s2) && (sudContains s1 s2)
-
+--Helper function that checks if the rows of the base exist in
+--the solution
 sudContains :: Sudoku -> Sudoku -> Bool
 sudContains s1 s2 = and $ map rowContains (zip xs ys)
             where xs = rows s1
                   ys = rows s2
-
+--Helper function to compare two rows in the correct way
 rowContains :: ([Maybe Int], [Maybe Int]) -> Bool
 rowContains ([], [])         = True
 rowContains ((x:xs), (y:ys)) = if y == Nothing
@@ -334,7 +387,11 @@ rowContains ((x:xs), (y:ys)) = if y == Nothing
                                     then rowContains (xs, ys)
                                     else False
 
+--Property to see if the solve function is reasonable and sound
 prop_SolvedSound :: Sudoku -> Property
-prop_SolvedSound s = property $ isSolutionOf (fromJust $ solve s) s
+prop_SolvedSound s = if solved == Nothing
+                     then property $ isOkay s
+                     else property $ isSolutionOf (fromJust $ solved) s
+        where solved = solve s
 
-fewerChecks prop = quickCheckWith stdArgs{ maxSuccess = 10 } prop
+fewerChecks prop = quickCheckWith stdArgs{ maxSuccess = 30 } prop
