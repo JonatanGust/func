@@ -271,7 +271,7 @@ helpPropCandi s p (x:xs) = isSudoku s2 && isOkay s2 && (helpPropCandi s p xs)
 
 solve :: Sudoku -> Maybe Sudoku
 solve s = if (isOkay s && isSudoku s)
-          then solve' s
+          then solve'' s
           else Nothing
 
 --runs through all possible solutions, doesn't stop when a solution is found
@@ -293,3 +293,48 @@ solve' s | isFilled s            = Just s
                   --list of only sudoku, if empty no solution was found
                   solutions      = delete Nothing (nub solvedPosSuds)
 
+solve'' :: Sudoku -> Maybe Sudoku
+solve'' s | isFilled s                   = Just s
+          | length sCand == 0     = Nothing
+          | otherwise             = helpSolve'' s sblankPos sCand
+    where          -- list of Pos that are empty in s
+                   sblankPos      = head $ blanks s
+                   --list of maybe ints
+                   sCand          = map Just (candidates s sblankPos)
+
+
+helpSolve'' :: Sudoku -> Pos -> [Maybe Int] -> Maybe Sudoku
+helpSolve'' s p [] = Nothing
+helpSolve'' s p (x:xs)  = if solved == Nothing
+                          then helpSolve'' s p xs
+                          else solved
+                where solved = solve'' (update s p x)
+
+readAndSolve :: FilePath -> IO ()
+readAndSolve fp = do sud <- readSudoku(fp)
+                     let solved = solve sud
+                     if solved == Nothing
+                     then print "No solution"
+                     else printSudoku (fromJust (solve sud))
+
+isSolutionOf :: Sudoku -> Sudoku -> Bool
+isSolutionOf s1 s2 = (isFilled s1) && (isOkay s1)
+                     && (isOkay s2) && (sudContains s1 s2)
+
+sudContains :: Sudoku -> Sudoku -> Bool
+sudContains s1 s2 = and $ map rowContains (zip xs ys)
+            where xs = rows s1
+                  ys = rows s2
+
+rowContains :: ([Maybe Int], [Maybe Int]) -> Bool
+rowContains ([], [])         = True
+rowContains ((x:xs), (y:ys)) = if y == Nothing
+                               then rowContains (xs, ys)
+                               else if (x==y)
+                                    then rowContains (xs, ys)
+                                    else False
+
+prop_SolvedSound :: Sudoku -> Property
+prop_SolvedSound s = property $ isSolutionOf (fromJust $ solve s) s
+
+fewerChecks prop = quickCheckWith stdArgs{ maxSuccess = 10 } prop
