@@ -233,7 +233,8 @@ prop_isblanks (Sudoku ss) = and[((ss !! (fst p)) !! (snd p) )
 --new element in place of old
 (!!=) :: [a] -> (Int,a) -> [a]
 (!!=) [] _ = error "List is empty"
-(!!=) xs (n,_) | n < 0 || length(xs) <= n = error "Illegal index"
+(!!=) xs (n,_) | n < 0 || length(xs) <= n = xs
+--(!!=) xs (n,_) | n < 0 || length(xs) <= n = error "Illegal index"
 (!!=) (x:xs) (0,a) = a:xs
 (!!=) (x:xs) (n,a) = x:((!!=) xs ((n-1),a))
 
@@ -244,7 +245,15 @@ prop_insert [] _ = True
 prop_insert xs (n,_) | n < 0 || length(xs) <= n = True
 prop_insert a (n,b) = (length a2 == length a)
                       && ((a2 !! n) == b)
-                    where a2 = (a !!= (n,b))
+                      && firstA == firstA2
+                      && lastA == lastA2
+                      where a2 = (a !!= (n,b))
+                            firstA = take n a
+                            lastA = drop (n+1) a
+                            firstA2 = take (n) a2
+                            lastA2 = drop (n+1) a2
+
+
 
 --Updates the sudoku with the given int at the given pos, returns updated sud
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
@@ -255,9 +264,9 @@ update (Sudoku s) p m =
 --now we simply test that the new element is in the right place and that
 --the sudoku isn't broken by the function
 prop_update :: Sudoku -> Pos -> Maybe Int -> Bool
-prop_update (Sudoku s) p m = isOkay (Sudoku s2)
-                            && (s2 !! (fst p)) !! (snd p) == m
-                where (Sudoku s2) = (update (Sudoku s) p m)
+prop_update (Sudoku s) p m = (s2 !! (fst p')) !! (snd p') == m
+                where (Sudoku s2) = (update (Sudoku s) p' m)
+                      p' = (mod (abs(fst p)) 9, mod (abs(snd p)) 9)
 
 --Retrieves the possible numbers for the specified Pos for the given sudoku
 candidates :: Sudoku -> Pos -> [Int]
