@@ -230,43 +230,53 @@ prop_isblanks (Sudoku ss) = and[((ss !! (fst p)) !! (snd p) )
 
 --Replaces the specified element in the list [a] with the given element a
 --int is the index of the element to be replaced returns the list with the
---new element in place of old
+--new element in place of old, if empty list or index OOB nothing happens
 (!!=) :: [a] -> (Int,a) -> [a]
-(!!=) [] _ = error "List is empty"
+(!!=) [] _                                = []
 (!!=) xs (n,_) | n < 0 || length(xs) <= n = xs
---(!!=) xs (n,_) | n < 0 || length(xs) <= n = error "Illegal index"
-(!!=) (x:xs) (0,a) = a:xs
-(!!=) (x:xs) (n,a) = x:((!!=) xs ((n-1),a))
+(!!=) (x:xs) (0,a)                        = a:xs
+(!!=) (x:xs) (n,a)                        = x:((!!=) xs ((n-1),a))
 
 --Test the property of replaceby checking length of list is the same and that
 --the element at index after replace is replaced with the given element
 prop_insert :: [Maybe Int] -> (Int,Maybe Int) -> Bool
-prop_insert [] _ = True
+prop_insert [] _                                = True
 prop_insert xs (n,_) | n < 0 || length(xs) <= n = True
-prop_insert a (n,b) = (length a2 == length a)
-                      && ((a2 !! n) == b)
-                      && firstA == firstA2
-                      && lastA == lastA2
-                      where a2 = (a !!= (n,b))
-                            firstA = take n a
-                            lastA = drop (n+1) a
-                            firstA2 = take (n) a2
-                            lastA2 = drop (n+1) a2
+prop_insert a (n,b)                             = (length a2 == length a)
+                        && ((a2 !! n) == b)
+                        && firstA == firstA2
+                        && lastA == lastA2
+                      where a2                  = (a !!= (n,b))
+                            firstA              = take (n) a
+                            firstA2             = take (n) a2
+                            lastA               = drop (n+1) a
+                            lastA2              = drop (n+1) a2
 
 
 
 --Updates the sudoku with the given int at the given pos, returns updated sud
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
-update (Sudoku s) p m =
-                    Sudoku (s !!= (fst p, ((s !! (fst p)) !!= ((snd p),m))))
+update (Sudoku s) p m = Sudoku (s !!=
+                        (fst p, ((s !! (fst p)) !!= ((snd p),m))))
 
---Test the property of update, we could do this much more thurogly but for
---now we simply test that the new element is in the right place and that
---the sudoku isn't broken by the function
+--Test that the new element is in the right place and that
+--the sudoku isn't otherwise changed
 prop_update :: Sudoku -> Pos -> Maybe Int -> Bool
-prop_update (Sudoku s) p m = (s2 !! (fst p')) !! (snd p') == m
-                where (Sudoku s2) = (update (Sudoku s) p' m)
-                      p' = (mod (abs(fst p)) 9, mod (abs(snd p)) 9)
+prop_update (Sudoku s) p m          = (s2 !! (fst p')) !! (snd p') == m
+                                      && rowsBeforeS == rowsBeforeS2
+                                      && rowsAfterS == rowsAfterS2
+                                      && elemsBeforeS == elemsBeforeS2
+                                      && elemsAfterS == elemsAfterS2
+                where (Sudoku s2)   = (update (Sudoku s) p' m)
+                      p'            = (mod (abs(fst p)) 9, mod (abs(snd p)) 9)
+                      rowsBeforeS   = take (fst p') s
+                      rowsBeforeS2  = take (fst p') s2
+                      rowsAfterS    = drop ((fst p')+1) s
+                      rowsAfterS2   = drop ((fst p')+1) s2
+                      elemsBeforeS  = take (snd p') $s !! (fst p')
+                      elemsBeforeS2 = take (snd p') $s2 !! (fst p')
+                      elemsAfterS   = drop ((snd p')+1) $s !! (fst p')
+                      elemsAfterS2  = drop ((snd p')+1) $s2 !! (fst p')
 
 --Retrieves the possible numbers for the specified Pos for the given sudoku
 candidates :: Sudoku -> Pos -> [Int]
