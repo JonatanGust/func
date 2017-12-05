@@ -307,42 +307,6 @@ solve s = if (isOkay s && isSudoku s)
           then solve''' s
           else Nothing
 
---runs through all possible solutions, doesn't stop when a solution is found
-solve' :: Sudoku -> Maybe Sudoku
-solve' s | isFilled s            = Just s
-         | length sCand == 0     = Nothing
-         | length solutions == 0 = Nothing
-         | otherwise             = head solutions
-            where -- list of Pos that are empty in s
-                  sblank         = blanks s
-                  --list of maybe ints
-                  sCand          = map Just (candidates s (head sblank))
-                  --list of all possible sudokus (using sCand for the first
-                  --blank pos
-                  possibleSuds   = (map (update s ((head sblank) )) sCand)
-                  --list of recursivly solved sudokus or nothing if no
-                  --soluiton
-                  solvedPosSuds  = (map solve' possibleSuds)
-                  --list of only sudoku, if empty no solution was found
-                  solutions      = delete Nothing (nub solvedPosSuds)
-
---Runs trhough all possible solutions untill a solution is found
-solve'' :: Sudoku -> Maybe Sudoku
-solve'' s | isFilled s                   = Just s
-          | length sCand == 0     = Nothing
-          | otherwise             = helpSolve'' s sblankPos sCand
-    where          -- list of Pos that are empty in s
-                   sblankPos      = head $ blanks s
-                   --list of maybe ints
-                   sCand          = map Just (candidates s sblankPos)
---Recursive helpfunc for solve''
-helpSolve'' :: Sudoku -> Pos -> [Maybe Int] -> Maybe Sudoku
-helpSolve'' s p []      = Nothing
-helpSolve'' s p (x:xs)  = if solved == Nothing
-                          then helpSolve'' s p xs
-                          else solved
-                where solved = solve'' (update s p x)
-
 --Runs trhough all possible solutions but fills in the spaces with lowest
 --amount of possible numbers first
 solve''' :: Sudoku -> Maybe Sudoku
