@@ -1,4 +1,4 @@
-
+module Othello where
 data Brick = Black | White
  deriving (Show, Eq)
 
@@ -33,4 +33,4 @@ legalMoves :: Othello -> [(Int,Int)]
 legalMoves = undefined
 
 
-makeMove :: Othello -> Brick -> ()
+--makeMove :: Othello -> Brick -> ()
