@@ -7,9 +7,9 @@ data Brick = Black | White
 --             ,
 --             Maybe Brick
 --             ,Maybe Brick,Maybe Brick,Maybe Brick,Maybe Brick,Maybe Brick,Maybe Brick,]
-data BS = Maybe Brick
+--data BS = Maybe Brick
 
-data Othello = Othello {rows :: [[BS]]}
+data Othello = Othello {rows :: [[Maybe Brick]]}
 
 
 exampleO :: Othello
