@@ -1,3 +1,5 @@
+module Othello where
+import Data.FixedList
 
 data Brick = Black | White
  deriving (Show, Eq)
@@ -6,10 +8,10 @@ data Brick = Black | White
 --             ,
 --             Maybe Brick
 --             ,Maybe Brick,Maybe Brick,Maybe Brick,Maybe Brick,Maybe Brick,Maybe Brick,]
+data BS = Maybe Brick
 
+data Othello = Othello {rows :: [[BS]]}
 
-data Othello = Othello {rows :: [[Maybe Brick]] }
- deriving (Show, Eq)
 
 exampleO :: Othello
 exampleO =
@@ -33,4 +35,4 @@ legalMoves :: Othello -> [(Int,Int)]
 legalMoves = undefined
 
 
-makeMove :: Othello -> Brick -> ()
+--makeMove :: Othello -> Brick -> ()
