@@ -8,9 +8,6 @@ data Brick = Black | White
 --             ,Maybe Brick,Maybe Brick,Maybe Brick,Maybe Brick,Maybe Brick,Maybe Brick,]
 
 
---type List8 a = [a,a,a,a,a,a,a,a]
-
-
 data Othello = Othello {rows :: [[Maybe Brick]] }
  deriving (Show, Eq)
 
@@ -32,3 +29,8 @@ exampleO =
     w = Just White
 
 
+legalMoves :: Othello -> [(Int,Int)]
+legalMoves = undefined
+
+
+makeMove :: Othello -> Brick -> ()
