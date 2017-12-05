@@ -1,5 +1,4 @@
 module Othello where
-import Data.FixedList
 
 data Brick = Black | White
  deriving (Show, Eq)
