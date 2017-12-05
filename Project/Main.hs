@@ -17,10 +17,17 @@ import Othello
 --data CanvasBox = F (Picture ()) (MouseEvent, MouseData)
 
 
-main = do addStyleLink "demo.css"
-          runF (h2F (textF "WebFudgets OUtro") >+ examples)
+main = do addStyleLink "demoo.css"
+          runF (h2F (textF "WebFudgets OUtro") >+ boxTable)
 
-examples = canvasList exampleO--ex1 >+ ex2 >+ ex3 >+ ex4 >+ex5 >+ ex6 >+ ex7 >+ ex8 >+ex9 >+ex10
+--examples = tableF 8 $ canvasList exampleO--ex1 >+ ex2 >+ ex3 >+ ex4 >+ex5 >+ ex6 >+ ex7 >+ ex8 >+ex9 >+ex10
+
+boxTable = (tableF 8 (canvasList exampleO)) `withF` css
+                where css = [style "border-collapse" =: "collapse",
+                             style "border-spacing" =: "0px 0",
+                             style "line-height" =: "0px"]
+
+
 
 canvasList :: Othello -> (F (Picture ()) (MouseEvent, MouseData))
 canvasList (Othello [])                     = emptybox
@@ -36,17 +43,19 @@ canvasList (Othello o) | elem == Just Black = blackbox >+ (canvasList newO)
 
 emptybox = canvasF (0,0)
 
-greenbox = canvasF (20,20) `withF` css
+boxW = 40
+
+greenbox = canvasF (boxW,boxW) `withF` css
     where css = [style "border" =: "1px solid black",
            style "background" =: "green"]
 
 
-whitebox = canvasF (20,20) `withF` css
+whitebox = canvasF (boxW,boxW) `withF` css
     where css = [style "border" =: "1px solid black",
            style "background" =: "white"]
 
 
-blackbox = canvasF (20,20) `withF` css
+blackbox = canvasF (boxW,boxW) `withF` css
     where css = [style "border" =: "1px solid black",
            style "background" =: "black"]
 
