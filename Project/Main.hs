@@ -20,9 +20,11 @@ import Othello
 main = do addStyleLink "demoo.css"
           runF (h2F (textF "WebFudgets OUtro") >+ boxTable)
 
+example1 = update exampleO (1,1) (Just White)
+
 --examples = tableF 8 $ canvasList exampleO--ex1 >+ ex2 >+ ex3 >+ ex4 >+ex5 >+ ex6 >+ ex7 >+ ex8 >+ex9 >+ex10
 
-boxTable = (tableF 8 (canvasList exampleO)) `withF` css
+boxTable = (tableF 8 (canvasList example1)) `withF` css
                 where css = [style "border-collapse" =: "collapse",
                              style "border-spacing" =: "0px 0",
                              style "line-height" =: "0px"]
@@ -45,20 +47,15 @@ emptybox = canvasF (0,0)
 
 boxW = 40
 
-greenbox = canvasF (boxW,boxW) `withF` css
-    where css = [style "border" =: "1px solid black",
-           style "background" =: "green"]
 
+blackbox = box "black"
+greenbox = box "green"
+whitebox = box "white"
 
-whitebox = canvasF (boxW,boxW) `withF` css
-    where css = [style "border" =: "1px solid black",
-           style "background" =: "white"]
-
-
-blackbox = canvasF (boxW,boxW) `withF` css
-    where css = [style "border" =: "1px solid black",
-           style "background" =: "black"]
-
+box :: String -> (F (Picture ()) (MouseEvent, MouseData))
+box s = canvasF (boxW,boxW) `withF` css
+            where css = [style "border" =: "1px solid black",
+                   style "background" =: s]
 
 
 
