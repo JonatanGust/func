@@ -17,7 +17,7 @@ import Othello
 --data CanvasBox = F (Picture ()) (MouseEvent, MouseData)
 
 
-main = do addStyleLink "demoo.css"
+main = do addStyleLink "style.css"
           runF (h2F (textF "WebFudgets OUtro") >+ boxTable)
 
 example1 = update exampleO (1,1) (Just White)
