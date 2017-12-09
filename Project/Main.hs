@@ -20,9 +20,11 @@ import Othello
 main = do addStyleLink "demoo.css"
           runF (h2F (textF "WebFudgets OUtro") >+ boxTable)
 
+--example1 = update example0 (1,1) (Just White)
+
 --examples = tableF 8 $ canvasList exampleO--ex1 >+ ex2 >+ ex3 >+ ex4 >+ex5 >+ ex6 >+ ex7 >+ ex8 >+ex9 >+ex10
 
-boxTable = (tableF 8 (canvasList exampleO)) `withF` css
+boxTable = (tableF 8 (canvasList example0)) `withF` css
                 where css = [style "border-collapse" =: "collapse",
                              style "border-spacing" =: "0px 0",
                              style "line-height" =: "0px"]
