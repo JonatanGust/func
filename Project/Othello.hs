@@ -1,25 +1,24 @@
 module Othello where
 import Data.Maybe
+
 data Brick = Black | White
- deriving (Eq)
+    deriving (Eq)
+
 instance Show Brick where
     show Black = "B"
     show White = "W"
---data List8 = [Maybe Brick
---             ,
---             Maybe Brick
---             ,Maybe Brick,Maybe Brick,Maybe Brick,Maybe Brick,Maybe Brick,Maybe Brick,]
---data BS = Maybe Brick
 
 data Othello = Othello {rows :: [[Maybe Brick]]}
+
 type Pos = (Int,Int)
 
---A list of all possible Pos in a Othello
+--A list of all possible Pos in an Othello
 posList :: [Pos]
 posList = [(x,y) | x <- [0..7], y <- [0..7]]
 
-exampleO :: Othello
-exampleO =
+--emptyOthello is an enmpty othello (in the sense that no moves has been made)
+emptyO :: Othello
+emptyO =
     Othello
       [ [n  ,n  ,n  ,n  ,n  ,n  ,n  ,n   ]
       , [n  ,n  ,n  ,n  ,n  ,n  ,n  ,n   ]
@@ -58,6 +57,18 @@ getRowStr (x:xs) = "." ++ getRowStr xs
 --removeN (x:xs) = if x == Nothing
 --                    then removeN xs
 --                    else x:(removeN xs)
+
+--isOthelloOK
+isOOK :: Othello -> Bool
+isOOK o = length(rows o) == 8 && isOROK o
+--isOthelloRowsOK
+isOROK :: Othello -> Bool
+isOROK o = and $ map isROK oRows
+    where oRows = rows o
+--isRowOK
+isROK :: [Maybe Brick] -> Bool
+isROK r = length r == 8
+
 --Insert function
 (!!=) :: [a] -> (Int,a) -> [a]
 (!!=) [] _                                = []
@@ -174,4 +185,9 @@ placeBA o p b = flipB (update o p (Just b)) p (Just b)
 --canPlayer*Brick*Move
 canPM :: Othello -> Brick -> Bool
 canPM o b = length (allLMB o (Just b)) > 0
---makeMove :: Othello -> Brick -> ()
+
+--try(to)PlaceBrick
+tryPB :: Othello -> Pos -> Brick -> (Bool, Othello)
+tryPB o p b = if p `elem` (allLMB o (Just b))
+                    then (True, placeBA o p b)
+                    else (False, o)
