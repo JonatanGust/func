@@ -49,12 +49,10 @@ main = do
                          np     = decidePlayer no p
                      if b
                         then
-                            do --let (lo, lp) = helpPlayers on np
-                               writeIORef ot (no,np)
+                            do writeIORef ot (no,np)
                                mapM_ (renderOnTop can) $ renderAll no
                                renderText txtCan (no,np)
                         else return ()
-                     --(oc,p) <- readIORef ot
                      if null $ allLM no
                         then renderWinner no txtCan (getWinner no)
                         else return ()

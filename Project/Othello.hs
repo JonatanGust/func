@@ -237,15 +237,6 @@ getWinner o | (getPS o White) > (getPS o Black) = Just White
             | (getPS o White) < (getPS o Black) = Just Black
             | otherwise = Nothing
 
---If there is only one avaible move for the given player, makes that move
---and then tries again (updates active player also)
-{-
-helpPlayers :: Othello -> Brick -> (Othello, Brick)
-helpPlayers o p | canPM o p = (o, p)
-                | otherwise = helpPlayers no np
-                where    no = snd $tryPB o (head (allLMB o (Just p))) p
-                         np = decidePlayer no p
--}
 --Given that a player has just made a move, this func decides who the next
 --player should be
 decidePlayer :: Othello -> Brick -> Brick
