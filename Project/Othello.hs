@@ -1,6 +1,6 @@
 module Othello where
 import Data.Maybe
---import Test.QuickCheck
+import Test.QuickCheck
 data Brick = Black | White
     deriving (Eq)
 
@@ -10,7 +10,7 @@ instance Show Brick where
 
 data Othello = Othello {rows :: [[Maybe Brick]]}
     deriving (Show, Eq)
-{--- | an instance for generating Arbitrary Othellos
+-- | an instance for generating Arbitrary Othellos
 rBrick :: Gen (Maybe Brick)
 rBrick = do rb <- (frequency [(5,elements [Just White, Just Black]),
                                 (5, return Nothing)])
@@ -21,10 +21,11 @@ instance Arbitrary Othello where
        if isOOK (Othello rows)
        then return (Othello rows)
        else arbitrary
+
 instance Arbitrary Brick where
           arbitrary =
             do rb <- elements [White, Black]
-               return rb-}
+               return rb
 
 type Pos = (Int,Int)
 
@@ -149,6 +150,7 @@ flipB' :: Othello -> Pos -> Maybe Brick -> [Pos] -> Othello
 flipB' o _ _ []    = o
 flipB' o p mb (x:xs) = flipB' o2 p mb xs
                     where o2 = flipBB o p mb x
+
 --flipBricksBetween
 --Flips bricks between the first and the second point
 --pA = point At, pG = point Goal, pC = point Cardinality, pN = point Next
@@ -168,6 +170,7 @@ flipBB o pA mb pG = if pA == pG
                                         then 1
                                         else 0
                         pN = ((fst pA)+pCr,(snd pA)+pCc)
+
 --List of directions is a list of all directions as vectors (legal directions)
 --        (+,+),(+,0),(+,-) ,(0,-) ,(-,-)  ,(-,0) ,(-,+) ,(0,+)
 pCList = [(1,1),(1,0),(1,-1),(0,-1),(-1,-1),(-1,0),(-1,1),(0,1)]
@@ -191,15 +194,16 @@ findBF' n o pA mb pC | (fst pN) < 0
                    where pN = ((fst pA)+(fst pC),(snd pA)+(snd pC))
 
 --isLegalMove(for)Brick returns true if the given brick can be placed here
-isLMB :: Maybe Brick -> (Othello, Pos) -> Bool
-isLMB mb (o, p) = length (findBF o p mb) > 0
+isLMB :: Brick -> (Othello, Pos) -> Bool
+isLMB b (o, p) = length (findBF o p (Just b)) > 0
 
 --allLegalMoves(for)Brick returns a list of all possible moves (pos) of the
 --given brick type
-allLMB :: Othello -> Maybe Brick -> [Pos]
-allLMB o mb = map snd $filter (isLMB mb) $zip (64 `replicate` o)
+allLMB :: Othello -> Brick -> [Pos]
+allLMB o b = map snd $filter (isLMB b) $zip (64 `replicate` o)
                 $filter (isPE o) posList
-
+prop_allLMB ::  Othello -> Brick -> Bool
+prop_allLMB o b = undefined
 --isPosEmpty checks if the position is empty (Nothing)
 isPE :: Othello -> Pos -> Bool
 isPE o (r,c) = Nothing == ((rows o) !! r !! c)
@@ -207,7 +211,7 @@ isPE o (r,c) = Nothing == ((rows o) !! r !! c)
 --allLegalMoves is a list of all positions where any brick can be placed (can
 --contain duplicates)
 allLM :: Othello -> [Pos]
-allLM o = (allLMB o (Just Black))++(allLMB o (Just White))
+allLM o = (allLMB o (Black))++(allLMB o (White))
 
 --placeBrickAt(pos) places the given brick at the position and updates the
 --rest of the board acordingly
@@ -217,13 +221,13 @@ placeBA o p b = flipB (update o p (Just b)) p (Just b)
 --canPlayer(Brick)Move returns true if there is atleast one move that the
 --player (brick) can do
 canPM :: Othello -> Brick -> Bool
-canPM o b = length (allLMB o (Just b)) > 0
+canPM o b = length (allLMB o b) > 0
 
 --try(to)PlaceBrick places the brick at the given pos if it is a legal move,
 --returns a tuple of (success of op, result), wich is to say (true, updated
 --othello) or (false, given othello)
 tryPB :: Othello -> Pos -> Brick -> (Bool, Othello)
-tryPB o p b = if p `elem` (allLMB o (Just b))
+tryPB o p b = if p `elem` (allLMB o b)
                     then (True, placeBA o p b)
                     else (False, o)
 
