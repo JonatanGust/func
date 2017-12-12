@@ -28,43 +28,39 @@ brickSizeInt = 100
 --brickSizeDouble = fromIntegral brickSizeInt
 
 brickSize = 100
-o = emptyO
-p = Black
 
-decidePlayer :: Brick -> IO Brick
-decidePlayer Black = if canPM o White
-                        then return White
-                        else return Black
-decidePlayer White = if canPM o Black
-                        then return Black
-                        else return White
+decidePlayer :: Othello -> Brick -> Brick
+decidePlayer o Black = if canPM o White
+                        then White
+                        else Black
+decidePlayer o White = if canPM o Black
+                        then Black
+                        else White
 main = do
           canvas <- (mkCanvas "white")
           column documentBody [canvas]
           Just can <- fromElem (canvas)
-          render can (drawSquare 0 0 "black" )
-          renderOnTop can (drawSquare 100 100 "green" )
-          drawAll can o
-          --mapM (renderOnTop can) $ renderAll o
+
+          render can (drawBoard 0 0 "green" )
+          ot <- newIORef (emptyO, Black)
+          drawAll can emptyO
+--          mapM (renderOnTop can) $ renderAll
+
+
           canvas `onEvent` Click $ \mouse -> do
+                         (oc,p) <- readIORef ot
                          let (x,y)  = mouseCoords mouse
                              pos    = (fromIntegral (x), fromIntegral (y))
                              cX = x `div` brickSizeInt--(toInteger brickSize)
                              cY = y `div` brickSizeInt--(toInteger brickSize)
-                             (b,on) = tryPB o (cX,cY) Black
---                         renderOnTop can (drawSquare 100 100 "white" )
---                         renderOnTop can (drawSquare 200 200 "black" )
---                         drawAll can o
-                         --mapM_ (renderOnTop can) $ renderAll on
-
+                             (b,on) = tryPB oc (cX,cY) p
 
                          if b
-                            then do o <- return on
-                                    p <- decidePlayer p
-                                    mapM_ (renderOnTop can) $ renderAll on
-                            else return ()
-
-
+                            then
+                                do writeIORef ot (on,decidePlayer on p)
+                                   mapM_ (renderOnTop can) $ renderAll on
+                            else
+                                do mapM_ (renderOnTop can) $ renderAll on
 
 
 --                         renderOnTop can (drawSquare (fst pos) (snd pos) "white" )
@@ -75,8 +71,8 @@ main = do
           drawAll can o = mapM (renderOnTop can) $ renderAll o
 
 renderSquare :: (Maybe Brick, (Pos)) -> Picture ()
-renderSquare (b,(x,y)) | b == (Just Black) = (drawSquare (doublex*brickSize) (doubley*brickSize) "black" )
-                       | b == (Just White) = (drawSquare (doublex*brickSize) (doubley*brickSize) "white" )
+renderSquare (b,(x,y)) | b == (Just Black) = (drawCircle (doublex*brickSize) (doubley*brickSize) "black" )
+                       | b == (Just White) = (drawCircle (doublex*brickSize) (doubley*brickSize) "white" )
                        | otherwise         = (drawSquare (doublex*brickSize) (doubley*brickSize) "green" )
                        where
                            doublex = fromIntegral x
@@ -116,6 +112,23 @@ mkButton label =
 squareShape :: Double -> Double -> Shape ()
 squareShape x y = rect ((x, y)) (((x+brickSize), (y+brickSize)))
 
+boardShape :: Double -> Double -> Shape ()
+boardShape x y = rect ((x, y)) (x+(brickSize*8), (y+(brickSize*8)))
+
+circleShape :: Double -> Double -> Shape ()
+circleShape x y = circle (x+(brickSize/2),y+(brickSize/2)) ((brickSize - (brickSize / 10)) /2)
+
+drawCircle :: Double -> Double -> String -> Picture ()
+drawCircle x y clr = do
+     color (getRGB "green") $ fill $ squareShape x y
+     stroke $ squareShape x y
+     color (getRGB clr) $ fill $ circleShape x y
+     stroke $ circleShape x y
+
+drawBoard :: Double -> Double -> String -> Picture ()
+drawBoard x y clr = do
+    color (getRGB clr) $ fill $ squareShape x y
+    stroke $ squareShape x y
 
 drawSquare :: Double -> Double -> String -> Picture ()
 drawSquare x y clr = do
