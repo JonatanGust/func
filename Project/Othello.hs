@@ -1,6 +1,6 @@
 module Othello where
 import Data.Maybe
-
+import Test.QuickCheck
 data Brick = Black | White
     deriving (Eq)
 
@@ -9,6 +9,22 @@ instance Show Brick where
     show White = "White"
 
 data Othello = Othello {rows :: [[Maybe Brick]]}
+    deriving (Show, Eq)
+-- | an instance for generating Arbitrary Othellos
+rBrick :: Gen (Maybe Brick)
+rBrick = do rb <- (frequency [(5,elements [Just White, Just Black]),
+                                (5, return Nothing)])
+            return rb
+instance Arbitrary Othello where
+  arbitrary =
+    do rows <- vectorOf 8 (vectorOf 8 rBrick)
+       if isOOK (Othello rows)
+       then return (Othello rows)
+       else arbitrary
+instance Arbitrary Brick where
+          arbitrary =
+            do rb <- elements [White, Black]
+               return rb
 
 type Pos = (Int,Int)
 
@@ -133,7 +149,6 @@ flipB' :: Othello -> Pos -> Maybe Brick -> [Pos] -> Othello
 flipB' o _ _ []    = o
 flipB' o p mb (x:xs) = flipB' o2 p mb xs
                     where o2 = flipBB o p mb x
-
 --flipBricksBetween
 --Flips bricks between the first and the second point
 --pA = point At, pG = point Goal, pC = point Cardinality, pN = point Next

@@ -10,7 +10,26 @@ import Data.IORef
 
 brickSize = 90
 fieldSize = brickSize * 8
-
+--The main function does the following:
+--Creates canvas for both game board, text fields and a button
+--Adds them to a column div in the dokument body
+--ot is our state, containging the game board and active player
+--      is initiated to the starting gameboard and with player black as first
+--We draw the default game board
+--We draw text in the bottom canvas
+--Now we add a click handler for the canvas,
+--      here we check where the click happened and try to do a move,
+--      using tryPB from the Othello module, if the move was legal we update
+--      our state and also check if there is more than 1 lega lmove for the
+--      next player, if there isn't we do that move for the player (recursive)
+--      After all that we repaint the game board and text, and lastly we do
+--      a check to see if the game has ended, if so we print the winner in the
+--      text canvas.
+--Now we add a click handler to the button (restart) that clears the current
+--      body and then reinitiates the main function.
+--In the where section we have
+--  1)  renderAll wich creates pictures() (from haste) of the whole gameboard
+--  2)  drawAll wich draws all the renders
 main = do
       canvas <- (mkCanvas (fieldSize,fieldSize) "white")
       txtCanvas <- (mkCanvas (fieldSize/8,fieldSize) "white")
@@ -37,7 +56,7 @@ main = do
                         else return ()
                      (oc,p) <- readIORef ot
                      if null $ allLM oc
-                        then renderWinner on txtCan (getWinner oc)
+                        then renderWinner oc txtCan (getWinner oc)
                         else return ()
 
       restartBtn `onEvent` Click $ \_ -> do
