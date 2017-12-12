@@ -5,8 +5,8 @@ data Brick = Black | White
     deriving (Eq)
 
 instance Show Brick where
-    show Black = "B"
-    show White = "W"
+    show Black = "Black"
+    show White = "White"
 
 data Othello = Othello {rows :: [[Maybe Brick]]}
 
@@ -218,3 +218,8 @@ tryPB o p b = if p `elem` (allLMB o (Just b))
 --getPlayerScore returns score of that player
 getPS :: Othello -> Brick -> Int
 getPS o b = length $ filter ((Just b) == ) $ concat $ rows o
+
+getWinner :: Othello -> Maybe Brick
+getWinner o | (getPS o White) > (getPS o Black) = Just White
+            | (getPS o White) < (getPS o Black) = Just Black
+            | otherwise = Nothing

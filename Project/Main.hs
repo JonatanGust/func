@@ -26,8 +26,9 @@ size = brickSize * 8
 
 main = do
           canvas <- (mkCanvas (size,size) "white")
-          txtCanvas <- (mkCanvas (size/3,size) "white")
-          column documentBody [canvas,txtCanvas]
+          txtCanvas <- (mkCanvas (size/8,size) "white")
+          restart <- (mkButton "Restart")
+          column documentBody [canvas,txtCanvas,restart]
           Just can <- fromElem (canvas)
           ot <- newIORef (emptyO, Black)
           drawAll can emptyO
@@ -47,16 +48,34 @@ main = do
                                    mapM_ (renderOnTop can) $ renderAll on
                                    renderText txtCan (on,np)
                             else return ()
+                         if null $ allLM on
+                            then renderWinner on txtCan (getWinner on)
+                            else return ()
+
+
+          restart `onEvent` Click $ \_ -> do
+           clearChildren documentBody
+           main
+           return ()
 
           where
             renderAll o = map (renderSquare) $ (concat (rows o)) `zip` posList
             drawAll can o = mapM (renderOnTop can) $ renderAll o
 
+renderWinner :: Othello -> Canvas -> Maybe Brick -> IO ()
+renderWinner o txtCan b = do
+       render txtCan ( scale (2,2)   (text (20,20) ("White score: "++(show (getPS o White)))))
+       renderOnTop txtCan ( scale (2,2)   (text (120,20) ("Black score: "++ (show (getPS o Black)))))
+       renderOnTop txtCan ( scale (2,2)   (text (220,20) (winner)))
+       where winner = if b == Nothing then "It's a draw!"
+                        else if b == (Just Black) then "Black won!"
+                                else "White won!"
+
 renderText :: Canvas -> (Othello,Brick) -> IO ()
 renderText txtCan (o,b) = do
     render txtCan ( scale (2,2)   (text (20,20) ("White score: "++(show (getPS o White)))))
     renderOnTop txtCan ( scale (2,2)   (text (120,20) ("Black score: "++ (show (getPS o Black)))))
-    renderOnTop txtCan ( scale (2,2)   (text (220,20) ("It's "++(show b)++" players turn")))
+    renderOnTop txtCan ( scale (2,2)   (text (220,20) ("It's "++(show b)++" player's turn")))
 
 
 renderSquare :: (Maybe Brick, (Pos)) -> Picture ()
@@ -120,6 +139,9 @@ mkCanvas (h,w) s =
                              prop "width"            =: (show $w),
                              prop "height"           =: (show $h)]
 
+-- `mkButton label` makes a clickable button with the given label
+mkButton :: String -> IO Elem
+mkButton label = newElem "button" `with` [prop "textContent" =: label]
 
 -- column parent children adds the children as a column column to the parent
 column :: Elem -> [Elem] -> IO ()
