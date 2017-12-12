@@ -33,6 +33,22 @@ emptyO =
     n = Nothing
     b = Just Black
     w = Just White
+palmO :: Othello
+palmO =
+    Othello
+      [ [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
+      , [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
+      , [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
+      , [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
+      , [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
+      , [w  ,w  ,w  ,w  ,w  ,b  ,w  ,w   ]
+      , [w  ,w  ,b  ,w  ,b  ,w  ,w  ,w   ]
+      , [w  ,b  ,n  ,b  ,n  ,n  ,w  ,w   ]
+      ]
+  where
+    n = Nothing
+    b = Just Black
+    w = Just White
 
 -- printSudoku sud prints a nice representation of the sudoku sud on
 -- the screen
