@@ -1,14 +1,8 @@
-module Main2 where
+module Main where
 
 import Haste
 import Haste.Graphics.Canvas
 import Othello
-
---data CanvasBox = F (Picture ()) (MouseEvent, MouseData)
-
-
-
-
 
 import Haste.DOM
 import Haste.Events
@@ -17,97 +11,48 @@ import Data.IORef
 
 import Pages
 
-main = do addStyleLink "style.css"
-          runF (h2F (textF "WebFudgets OUtro") >+ boxTable)
-
---------------------------------------------------------------------------------
--- Pure code, the program logic
--- We follow the philosophy of doing as much as possible in the pure code.
-
-type Size = (Double,Double)
-
-radius :: Double
-radius = 15
-
-type Ball  = [Point]
-type State = [Ball]
-
-bounce :: Size -> Point -> Int -> Ball
-bounce (w,h) (x,y) v
-   | v == 0 && y >= maxY = replicate 20 (x,y)
-   | y' > maxY           = bounce (w,h) (x,y) (2-v)
-   | otherwise           = (x,y) : bounce (w,h) (x,y') v'
- where
-   maxY = h-radius
-   v'   = v + 1
-   y'   = y + fromIntegral v
-
--- We use Int to represent velocity, because we need to compare it to 0, which
--- is generally a bad idea for floating-point numbers (due to rounding errors).
-
-step :: State -> State
-step bs = [ ps | _:ps <- bs ]
-  -- Two purposes:
-  --
-  --  * Drop the first point in each ball
-  --  * Filter out finished balls (empty lists)
-
-
-
---------------------------------------------------------------------------------
--- Interactive code
--- This part is only concerned with interaction and drawing, not with the logic
--- determining the behavior of the balls.
-
-ballShape :: Ball -> Shape ()
-ballShape []      = return ()
-ballShape (pos:_) = circle pos radius
-
-drawBall :: Ball -> Picture ()
-drawBall ball = do
-    color (RGB 255 0 0) $ fill $ ballShape ball
-    stroke $ ballShape ball
-
-animate :: Canvas -> IORef State -> IO ()
-animate can state = do
-    balls <- readIORef state
-    writeIORef state $ step balls
-    render can $ mapM_ drawBall balls
-    setTimer (Once 20) $ animate can state
-    return ()
-
-canWidth, canHeight :: Num a => a
-canWidth  = 500
-canHeight = 500
-
 main = do
-    canvas <- mkCanvas canWidth canHeight
-    clear  <- mkButton "clear"
-    column documentBody [canvas,clear]
+            canvas <- (mkCanvas "white")
+            column documentBody [canvas]
+            Just can <- fromElem (canvas)
+            render can (drawSquare 1 1 "black" )
 
-    setStyle documentBody "backgroundColor" "lightblue"
-    setStyle documentBody "textAlign" "center"
 
-    Just can <- fromElem canvas
+canvasOthello :: Othello -> Canvas
+canvasOthello o = undefined
 
-    -- Use an IORef to communicate between the animation and the event handlers
-    state <- newIORef []
 
-    -- Start the animation
-    animate can state
+blackBrick = brick "black"
+whiteBrick = brick "white"
+greenBrick = brick "green"
 
-    -- Set an event handler for clicks in the canvas
-    canvas `onEvent` Click $ \mouse -> do
-      let (x,y) = mouseCoords mouse
-          pos   = (fromIntegral x, fromIntegral y)
-          ball  = bounce (canWidth,canHeight) pos 0
-      balls <- readIORef state
-      writeIORef state (ball:balls)
+brick :: String -> IO Elem
+brick s = mkCanvas s
 
-    -- Set an event handler for the clear button
-    clear `onEvent` Click $ \_ -> writeIORef state []
+mkButton :: String -> IO Elem
+mkButton label =
+  newElem "input" `with` [attr "type"  =: "button",
+                          attr "value" =: label]
 
--- Note: The current version of Haste does not run the event handler
--- concurrently with the animation, so there's no risk of a race between the
--- different uses of `writeIORef`. If it was truly concurrent, then atomic
--- operations would have to be used instead (see the Data.IORef documentation).
+squareShape :: Double -> Double -> Shape ()
+squareShape x y = rect ((x, y)) (((x+20), (y+20)))
+
+
+drawSquare :: Double -> Double -> String -> Picture ()
+drawSquare x y clr = do
+    color (getRGB "white") $ fill $ squareShape x y
+    stroke $ squareShape x y
+
+
+
+--getRGB :: String -> (RGB x y z)
+getRGB clr | clr == "green" = (RGB 0   255 0)
+           | clr == "black" = (RGB 0   0   0)
+           | clr == "white" = (RGB 255 255 255)
+
+mkCanvas :: String -> IO Elem
+mkCanvas s =
+    newElem "canvas" `with` [style "border"          =: "1px solid black",
+                             style "backgroundColor" =: "white",
+                             prop "width"            =: "400",--show width,
+                             prop "height"           =: "400"]--show height]

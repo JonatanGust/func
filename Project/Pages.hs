@@ -55,9 +55,9 @@ select :: Elem -> IO ()
 select = ffi $ toJSStr "(function(e) {e.select();})"
 
 -- `mkCanvas width height` makes a drawing canvas of the specified dimensions
-mkCanvas :: Int -> Int -> IO Elem
-mkCanvas width height =
-    newElem "canvas" `with` [style "border"          =: "1px solid black",
-                             style "backgroundColor" =: "white",
-                             prop "width"            =: show width,
-                             prop "height"           =: show height]
+--mkCanvas :: Int -> Int -> IO Elem
+--mkCanvas width height =
+--    newElem "canvas" `with` [style "border"          =: "1px solid black",
+--                             style "backgroundColor" =: "white",
+--                             prop "width"            =: show width,
+--                             prop "height"           =: show height]
