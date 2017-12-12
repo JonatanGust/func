@@ -33,6 +33,22 @@ emptyO =
     n = Nothing
     b = Just Black
     w = Just White
+palmO :: Othello
+palmO =
+    Othello
+      [ [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
+      , [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
+      , [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
+      , [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
+      , [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
+      , [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
+      , [w  ,w  ,b  ,w  ,w  ,b  ,w  ,w   ]
+      , [w  ,b  ,n  ,b  ,w  ,w  ,b  ,w   ]
+      ]
+  where
+    n = Nothing
+    b = Just Black
+    w = Just White
 
 -- printSudoku sud prints a nice representation of the sudoku sud on
 -- the screen
@@ -172,7 +188,12 @@ isLMB mb (o, p) = length (findBF o p mb) > 0
 --allLegalMoves(for)Brick returns a list of all possible moves (pos) of the given
 --brick type
 allLMB :: Othello -> Maybe Brick -> [Pos]
-allLMB o mb = map snd $filter (isLMB mb) $zip (64 `replicate` o) posList
+allLMB o mb = map snd $filter (isLMB mb) $zip (64 `replicate` o)
+                $filter (isPE o) posList
+--isPosEmpty
+isPE :: Othello -> Pos -> Bool
+isPE o (r,c) = Nothing == ((rows o) !! r !! c)
+
 
 --allLegalMoves is a list of all positions where any brick can be placed (can
 --contain duplicates)
