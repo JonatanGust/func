@@ -193,3 +193,7 @@ tryPB :: Othello -> Pos -> Brick -> (Bool, Othello)
 tryPB o p b = if p `elem` (allLMB o (Just b))
                     then (True, placeBA o p b)
                     else (False, o)
+
+--getPlayerScore returns score of that player
+getPS :: Othello -> Brick -> Int
+getPS o b = length $ filter ((Just b) == ) $ concat $ rows o
