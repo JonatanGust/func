@@ -45,18 +45,18 @@ main = do
                      let (x,y)  = mouseCoords mouse
                          cX = x `div` (round brickSize)
                          cY = y `div` (round brickSize)
-                         (b,on) = tryPB oc (cX,cY) p
-                         np     = decidePlayer on p
+                         (b,no) = tryPB oc (cX,cY) p
+                         np     = decidePlayer no p
                      if b
                         then
-                            do let (lo, lp) = helpPlayers on np
-                               writeIORef ot (lo,lp)
-                               mapM_ (renderOnTop can) $ renderAll lo
-                               renderText txtCan (lo,lp)
+                            do --let (lo, lp) = helpPlayers on np
+                               writeIORef ot (no,np)
+                               mapM_ (renderOnTop can) $ renderAll no
+                               renderText txtCan (no,np)
                         else return ()
-                     (oc,p) <- readIORef ot
-                     if null $ allLM oc
-                        then renderWinner oc txtCan (getWinner oc)
+                     --(oc,p) <- readIORef ot
+                     if null $ allLM no
+                        then renderWinner no txtCan (getWinner no)
                         else return ()
 
       restartBtn `onEvent` Click $ \_ -> do

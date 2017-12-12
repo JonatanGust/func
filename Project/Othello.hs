@@ -1,6 +1,6 @@
 module Othello where
 import Data.Maybe
-import Test.QuickCheck
+--import Test.QuickCheck
 data Brick = Black | White
     deriving (Eq)
 
@@ -10,7 +10,7 @@ instance Show Brick where
 
 data Othello = Othello {rows :: [[Maybe Brick]]}
     deriving (Show, Eq)
--- | an instance for generating Arbitrary Othellos
+{--- | an instance for generating Arbitrary Othellos
 rBrick :: Gen (Maybe Brick)
 rBrick = do rb <- (frequency [(5,elements [Just White, Just Black]),
                                 (5, return Nothing)])
@@ -24,7 +24,7 @@ instance Arbitrary Othello where
 instance Arbitrary Brick where
           arbitrary =
             do rb <- elements [White, Black]
-               return rb
+               return rb-}
 
 type Pos = (Int,Int)
 
@@ -57,9 +57,9 @@ palmO =
       , [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
       , [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
       , [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
-      , [w  ,w  ,w  ,w  ,w  ,w  ,w  ,w   ]
+      , [w  ,w  ,w  ,w  ,w  ,w  ,b  ,w   ]
       , [w  ,w  ,b  ,w  ,w  ,b  ,w  ,w   ]
-      , [w  ,b  ,n  ,b  ,w  ,w  ,b  ,w   ]
+      , [w  ,b  ,n  ,b  ,w  ,n  ,n  ,w   ]
       ]
   where
     n = Nothing
@@ -239,12 +239,13 @@ getWinner o | (getPS o White) > (getPS o Black) = Just White
 
 --If there is only one avaible move for the given player, makes that move
 --and then tries again (updates active player also)
+{-
 helpPlayers :: Othello -> Brick -> (Othello, Brick)
 helpPlayers o p | canPM o p = (o, p)
                 | otherwise = helpPlayers no np
                 where    no = snd $tryPB o (head (allLMB o (Just p))) p
                          np = decidePlayer no p
-
+-}
 --Given that a player has just made a move, this func decides who the next
 --player should be
 decidePlayer :: Othello -> Brick -> Brick
