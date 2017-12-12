@@ -145,19 +145,21 @@ pCList = [(1,1),(1,0),(1,-1),(0,-1),(-1,-1),(-1,0),(-1,1),(0,1)]
 
 --findBricks(to)Flip finds all positions that bounds a flipping line
 findBF :: Othello -> Pos -> Maybe Brick -> [Pos]
-findBF o p mb = catMaybes(map (findBF' o p mb) pCList)
+findBF o p mb = catMaybes(map (findBF' 1 o p mb) pCList)
 
 --findBricks(to)Flip' is a helper function that finds one positions that
 --bounds a flipping line given a cardinality (second pos)
-findBF' :: Othello -> Pos -> Maybe Brick -> Pos -> Maybe Pos
-findBF' o pA mb pC | (fst pN) < 0
+findBF' :: Int -> Othello -> Pos -> Maybe Brick -> Pos -> Maybe Pos
+findBF' n o pA mb pC | (fst pN) < 0
                      || (fst pN) > 7
                      || (snd pN) < 0
                      || (snd pN) > 7
                      || (((rows o) !! (fst pN)) !! (snd pN)) == Nothing
                         = Nothing
-                   | (((rows o) !! (fst pN)) !! (snd pN)) == mb = Just pN
-                   | otherwise = findBF' o pN mb pC
+                   | (((rows o) !! (fst pN)) !! (snd pN)) == mb =
+                        if n > 1 then Just pN
+                                 else Nothing
+                   | otherwise = findBF' (n+1) o pN mb pC
                    where pN = ((fst pA)+(fst pC),(snd pA)+(snd pC))
 
 
