@@ -37,19 +37,20 @@ main = do
           canvas `onEvent` Click $ \mouse -> do
                          (oc,p) <- readIORef ot
                          let (x,y)  = mouseCoords mouse
---                             pos    = (fromIntegral (x), fromIntegral (y))
                              cX = x `div` brickSizeInt
                              cY = y `div` brickSizeInt
                              (b,on) = tryPB oc (cX,cY) p
                              np     = decidePlayer on p
                          if b
                             then
-                                do writeIORef ot (on,np)
-                                   mapM_ (renderOnTop can) $ renderAll on
-                                   renderText txtCan (on,np)
+                                do let (lo, lp) = helpPlayers on np
+                                   writeIORef ot (lo,lp)
+                                   mapM_ (renderOnTop can) $ renderAll lo
+                                   renderText txtCan (lo,lp)
                             else return ()
-                         if null $ allLM on
-                            then renderWinner on txtCan (getWinner on)
+                         (oc,p) <- readIORef ot
+                         if null $ allLM oc
+                            then renderWinner on txtCan (getWinner oc)
                             else return ()
 
 
@@ -61,6 +62,12 @@ main = do
           where
             renderAll o = map (renderSquare) $ (concat (rows o)) `zip` posList
             drawAll can o = mapM (renderOnTop can) $ renderAll o
+
+helpPlayers :: Othello -> Brick -> (Othello, Brick)
+helpPlayers o p | 1 == length (allLMB o (Just p)) = helpPlayers no np
+                | otherwise                  = (o, p)
+            where no = snd $tryPB o (head (allLMB o (Just p))) p
+                  np = decidePlayer no p
 
 renderWinner :: Othello -> Canvas -> Maybe Brick -> IO ()
 renderWinner o txtCan b = do
