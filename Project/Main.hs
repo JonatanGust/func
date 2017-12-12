@@ -21,13 +21,18 @@ brickSize = 90
 brickSizeInt :: Int
 brickSizeInt = 90
 
+size = brickSize * 8
+
+
 main = do
-          canvas <- (mkCanvas "white")
-          column documentBody [canvas]
+          canvas <- (mkCanvas (size,size) "white")
+          txtCanvas <- (mkCanvas (size/3,size) "white")
+          column documentBody [canvas,txtCanvas]
           Just can <- fromElem (canvas)
           ot <- newIORef (emptyO, Black)
           drawAll can emptyO
-
+          Just txtCan <- fromElem (txtCanvas)
+          renderText txtCan (emptyO,Black)
           canvas `onEvent` Click $ \mouse -> do
                          (oc,p) <- readIORef ot
                          let (x,y)  = mouseCoords mouse
@@ -35,15 +40,24 @@ main = do
                              cX = x `div` brickSizeInt
                              cY = y `div` brickSizeInt
                              (b,on) = tryPB oc (cX,cY) p
+                             np     = decidePlayer on p
                          if b
                             then
-                                do writeIORef ot (on,decidePlayer on p)
+                                do writeIORef ot (on,np)
                                    mapM_ (renderOnTop can) $ renderAll on
-                            else
-                                do mapM_ (renderOnTop can) $ renderAll on
+                                   renderText txtCan (on,np)
+                            else return ()
+
           where
             renderAll o = map (renderSquare) $ (concat (rows o)) `zip` posList
             drawAll can o = mapM (renderOnTop can) $ renderAll o
+
+renderText :: Canvas -> (Othello,Brick) -> IO ()
+renderText txtCan (o,b) = do
+    render txtCan ( scale (2,2)   (text (20,20) ("White score: "++(show (getPS o White)))))
+    renderOnTop txtCan ( scale (2,2)   (text (120,20) ("Black score: "++ (show (getPS o Black)))))
+    renderOnTop txtCan ( scale (2,2)   (text (220,20) ("It's "++(show b)++" players turn")))
+
 
 renderSquare :: (Maybe Brick, (Pos)) -> Picture ()
 renderSquare (b,(x,y)) | b == (Just Black) =
@@ -96,14 +110,16 @@ getRGB clr | clr == "green" = (RGB 0   255 0)
            | clr == "white" = (RGB 255 255 255)
 
 
+
 ----------Methods stolen from Pages.hs---------------------------------------
 
-mkCanvas :: String -> IO Elem
-mkCanvas s =
+mkCanvas :: (Double,Double) -> String -> IO Elem
+mkCanvas (h,w) s =
     newElem "canvas" `with` [style "border"          =: "1px solid black",
                              style "backgroundColor" =: s,
-                             prop "width"            =: (show $8*brickSize),
-                             prop "height"           =: (show $8*brickSize)]
+                             prop "width"            =: (show $w),
+                             prop "height"           =: (show $h)]
+
 
 -- column parent children adds the children as a column column to the parent
 column :: Elem -> [Elem] -> IO ()
