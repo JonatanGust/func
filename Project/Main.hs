@@ -1,217 +1,135 @@
 module Main where
--- |  Web Fudgets Intro
--- Examples to introduce Web Fudgets (for declarative web programming)
--- Functional Programming course 2017.
--- Thomas Hallgren
 
-{-
-This started as a skeleton, the definitions were filled in during the lecture.
--}
---------------------------------------------------------------------------------
-
-import WebFudgets
-import HasteExtras(addStyleLink)
+import Haste
 import Haste.Graphics.Canvas
 import Othello
 
---data CanvasBox = F (Picture ()) (MouseEvent, MouseData)
+import Haste.DOM
+import Haste.Events
 
 
-main = do addStyleLink "style.css"
-          runF (h2F (textF "WebFudgets OUtro") >+ boxTable)
+import Haste.Prim
+import Haste.Foreign
+import Data.IORef
 
-example1 = update exampleO (1,1) (Just White)
+import Pages
 
---examples = tableF 8 $ canvasList exampleO--ex1 >+ ex2 >+ ex3 >+ ex4 >+ex5 >+ ex6 >+ ex7 >+ ex8 >+ex9 >+ex10
-
-boxTable = (tableF 8 (canvasList example1)) `withF` css
-                where css = [style "border-collapse" =: "collapse",
-                             style "border-spacing" =: "0px 0",
-                             style "line-height" =: "0px"]
-
-
-
-canvasList :: Othello -> (F (Picture ()) (MouseEvent, MouseData))
-canvasList (Othello [])                     = emptybox
-canvasList (Othello [[]])                   = emptybox
-canvasList (Othello ([]:xs))                = canvasList (Othello xs)
-canvasList (Othello o) | elem == Just Black = blackbox >+ (canvasList newO)
-                       | elem == Just White = whitebox >+ (canvasList newO)
-                       | otherwise          = greenbox >+ (canvasList newO)
-    where elem = head (head o)
-          newO = Othello $ (drop 1 (head o)) : (drop 1 o)
+type Square  = [Point]
+type State = [Square]
 
 
 
-emptybox = canvasF (0,0)
+--renderAll :: Othello -> IO ()
 
-boxW = 40
+brickSizeInt :: Int
+brickSizeInt = 100
+
+--brickSizeDouble :: Double
+--brickSizeDouble = fromIntegral brickSizeInt
+
+brickSize = 100
+o = emptyO
+p = Black
+
+decidePlayer :: Brick -> IO Brick
+decidePlayer Black = if canPM o White
+                        then return White
+                        else return Black
+decidePlayer White = if canPM o Black
+                        then return Black
+                        else return White
+main = do
+          canvas <- (mkCanvas "white")
+          column documentBody [canvas]
+          Just can <- fromElem (canvas)
+          render can (drawSquare 0 0 "black" )
+          renderOnTop can (drawSquare 100 100 "green" )
+          drawAll can o
+          --mapM (renderOnTop can) $ renderAll o
+          canvas `onEvent` Click $ \mouse -> do
+                         let (x,y)  = mouseCoords mouse
+                             pos    = (fromIntegral (x), fromIntegral (y))
+                             cX = x `div` brickSizeInt--(toInteger brickSize)
+                             cY = y `div` brickSizeInt--(toInteger brickSize)
+                             (b,on) = tryPB o (cX,cY) Black
+--                         renderOnTop can (drawSquare 100 100 "white" )
+--                         renderOnTop can (drawSquare 200 200 "black" )
+--                         drawAll can o
+                         --mapM_ (renderOnTop can) $ renderAll on
 
 
-blackbox = box "black"
-greenbox = box "green"
-whitebox = box "white"
-
-box :: String -> (F (Picture ()) (MouseEvent, MouseData))
-box s = canvasF (boxW,boxW) `withF` css
-            where css = [style "border" =: "1px solid black",
-                   style "background" =: s]
+                         if b
+                            then do o <- return on
+                                    p <- decidePlayer p
+                                    mapM_ (renderOnTop can) $ renderAll on
+                            else return ()
 
 
 
---ex9 = shellF "Canvas example" $
---      (pF sidesF >+< pF angleF) =>= gatherF =>= mapF polygon =>=
---      canvasF (300,300) `withF` css
---  where
---    --sidesF = textF "Draw a polygon with " +< smallF numberF >+ textF " sides."
---
---    angleF = toggleButtonF "Spin" =>= mapF setTimer =>= timerF
---              =>= putF 0 (stateF angle 0)
---    setTimer spin = if spin then Just (Repeat 40) else Nothing
---    angle a _ = ((a+1) `mod` 360 ,[pi*real a/180])
---
---    css = [style "border" =: "1px solid black",
---           style "background" =: "white"]
---
---real x = fromIntegral x
 
---------------------------------------------------------------------------------
--- * Hello world example
+--                         renderOnTop can (drawSquare (fst pos) (snd pos) "white" )
 
---ex1 = shellF "Hello" $ textF "Hello world!"
+
+            where
+          renderAll o = map (renderSquare) $ (concat (rows o)) `zip` posList
+          drawAll can o = mapM (renderOnTop can) $ renderAll o
+
+renderSquare :: (Maybe Brick, (Pos)) -> Picture ()
+renderSquare (b,(x,y)) | b == (Just Black) = (drawSquare (doublex*brickSize) (doubley*brickSize) "black" )
+                       | b == (Just White) = (drawSquare (doublex*brickSize) (doubley*brickSize) "white" )
+                       | otherwise         = (drawSquare (doublex*brickSize) (doubley*brickSize) "green" )
+                       where
+                           doublex = fromIntegral x
+                           doubley = fromIntegral y
+
+
+--step :: State -> State
+--step bs = [ ps | _:ps <- bs ]
 --
 --
-----------------------------------------------------------------------------------
----- * Illustrates parallel composition
+--animate :: Canvas -> IORef State -> IO ()
+--animate can state = do
+--    squares <- readIORef state
+----    writeIORef state $ step squares
+--    render can $ mapM_ drawSquare squares
+--    setTimer (Once 20) $ animate can state
+--    return ()
 --
---ex2 = shellF "Hello world with a button" $
---      textF "Hello" >+< buttonF "Click me"
---
---
-----------------------------------------------------------------------------------
----- * Illustrates serial composition and stateless application code
---
---ex3 = shellF "A program to test the factorial function version 1" $
---      numberF =>= mapF fac =>= showF
---
---fac 0 = 1
---fac n = n * fac (n-1)
---
---
-----------------------------------------------------------------------------------
----- * Illustrates layout and decoration
---
---ex4 = shellF "A program to test the factorial function version 2" $
---      pF (textF "n=" +< smallF numberF)
---      =>= mapF fac =>=
---      pF (textF "n! = " +< showF)
---
---smallF fudget = fudget `withF` [style "width" =: "5em"]
---
-----------------------------------------------------------------------------------
----- * Illustrates stateful application code
---
---ex5 = shellF "An Up Counter" $
---      smallF showF =<= stateF incr 0 =<= buttonF "Up"
---
---incr n BtnClick = (n+1,[n+1])
---
-----------------------------------------------------------------------------------
----- * Illustrates how to handle output from a parallel composition
---
---ex6 = shellF "An Up/Down Counter" $
---      smallF showF =<= stateF count 0 =<= (buttonF "Up" >+< buttonF "Down")
---  where
---    count n (Left BtnClick) = (n+1,[n+1])
---    count n (Right BtnClick) = (n-1,[n-1])
---
-----------------------------------------------------------------------------------
----- * Illustrates parallel composition of a list of things
---
---data CounterButton = Up | Down | Reset
---                     deriving (Eq,Show,Bounded,Enum)
---
---ex7 = shellF "An Up/Down/Reset Counter" $
---      smallF showF =<= stateF count 0 =<=
---      listF [(t,buttonF (show t)) | t <- [Up .. Reset]]
---  where
---    count n (Up,BtnClick) = (n+1,[n+1])
---    count n (Down,BtnClick) = (n-1,[n-1])
---    count n (Reset,BtnClick) = (0,[0])
---
-----------------------------------------------------------------------------------
----- * Illustrates feedback loops
---
---ex8 = shellF "A Loadable Up/Down Counter" $
---      loopLeftF (mapF Left =<= smallF readShowF =<= stateF count 0)
---      =<= (buttonF "Up" >+< buttonF "Down")
---  where
---    count n (Left new) = (new,[])
---    count n (Right (Left BtnClick)) = (n+1,[n+1])
---    count n (Right (Right BtnClick)) = (n-1,[n-1])
---
---
-----------------------------------------------------------------------------------
----- * A larger example (more of the same)
---
---data CalculatorButton
---     = Plus | Minus | Times | Div
---     | Enter | Clear | Digit Int
---     deriving Eq
---
---
---ex9 = shellF "A Simple Calculator" $
---      showF =<= stateF calc [0] =<= keyboardF
---  where
---    keyboardF = tableF 4 buttonsF
---    buttonsF = listF [d 7, d 8, d 9,op Div,
---                      d 4, d 5, d 6,op Times,
---                      d 1, d 2, d 3,op Minus,
---                      clr,d 0, ent,op Plus]
---
---    d n = (Digit n,buttonF (show n))
---    op o = (o,buttonF (opLabel o))
---    ent = op Enter
---    clr = op Clear
---
---    opLabel Plus  = "+"
---    opLabel Minus = "-"
---    opLabel Times = "×"
---    opLabel Div   = "÷"
---    opLabel Enter = "Ent"
---    opLabel Clear = "C"
---
---    calc (n:s)   (Digit d,_) = new (n*10+d) s
---    calc s       (Enter,_)   = (0:s,[head s])
---    calc s       (Clear,_)   = ([0],[0])
---    calc (y:x:s) (Plus,_)    = new (x+y) s
---    calc (y:x:s) (Minus,_)   = new (x-y) s
---    calc (y:x:s) (Times,_)   = new (x*y) s
---    calc (y:x:s) (Div,_)     = new (x `div` y) s
---    calc s       _           = (s,[head s])
---
---    new n s = (n:s,[n])
---
-----------------------------------------------------------------------------------
----- * Illustrates the use of a canvas for graphical output
---
---ex10 = shellF "Canvas example" $
---       pF (textF "Draw a polygon with " +< readShowF >+ textF " sides.")
---       =>= mapF polygon =>=
---       canvasF (300,300)
---
---polygon n = do color (RGB 255 255 128) (fill (path ps))
---               color (RGB 0 0 255)     (stroke (path ps))
---               text (20,20) "A simple canvas example"
---  where
---    ps = map corner [0..n]
---
---    c@(cx,cy) = (150,150) -- center
---    r = 100 -- radius of enclosing circle
---
---    corner i = (cx+r*cos a,cy+r*sin a)
---      where
---        r = 100
---        a = 2*pi*(real i/ real n)
---
---real x = fromIntegral x
+
+
+canvasOthello :: Othello -> Canvas
+canvasOthello o = undefined
+
+
+blackBrick = brick "black"
+whiteBrick = brick "white"
+greenBrick = brick "green"
+
+brick :: String -> IO Elem
+brick s = mkCanvas s
+
+mkButton :: String -> IO Elem
+mkButton label =
+  newElem "input" `with` [attr "type"  =: "button",
+                          attr "value" =: label]
+
+squareShape :: Double -> Double -> Shape ()
+squareShape x y = rect ((x, y)) (((x+brickSize), (y+brickSize)))
+
+
+drawSquare :: Double -> Double -> String -> Picture ()
+drawSquare x y clr = do
+    color (getRGB clr) $ fill $ squareShape x y
+    stroke $ squareShape x y
+
+
+getRGB clr | clr == "green" = (RGB 0   255 0)
+           | clr == "black" = (RGB 0   0   0)
+           | clr == "white" = (RGB 255 255 255)
+
+mkCanvas :: String -> IO Elem
+mkCanvas s =
+    newElem "canvas" `with` [style "border"          =: "1px solid black",
+                             style "backgroundColor" =: s,
+                             prop "width"            =: (show $8*brickSize),--show width,
+                             prop "height"           =: (show $8*brickSize)]--show height]
