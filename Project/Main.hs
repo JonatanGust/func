@@ -63,12 +63,6 @@ main = do
             renderAll o = map (renderSquare) $ (concat (rows o)) `zip` posList
             drawAll can o = mapM (renderOnTop can) $ renderAll o
 
-helpPlayers :: Othello -> Brick -> (Othello, Brick)
-helpPlayers o p | 1 == length (allLMB o (Just p)) = helpPlayers no np
-                | otherwise                  = (o, p)
-            where no = snd $tryPB o (head (allLMB o (Just p))) p
-                  np = decidePlayer no p
-
 renderWinner :: Othello -> Canvas -> Maybe Brick -> IO ()
 renderWinner o txtCan b = do
        render txtCan ( scale (2,2)   (text (20,20) ("White score: "++(show (getPS o White)))))
@@ -95,14 +89,6 @@ renderSquare (b,(x,y)) | b == (Just Black) =
                        where
                            doublex = fromIntegral x
                            doubley = fromIntegral y
-
-decidePlayer :: Othello -> Brick -> Brick
-decidePlayer o Black = if canPM o White
-                        then White
-                        else Black
-decidePlayer o White = if canPM o Black
-                        then Black
-                        else White
 
 squareShape :: Double -> Double -> Shape ()
 squareShape x y = rect ((x, y)) (((x+brickSize), (y+brickSize)))

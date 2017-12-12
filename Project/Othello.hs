@@ -223,3 +223,17 @@ getWinner :: Othello -> Maybe Brick
 getWinner o | (getPS o White) > (getPS o Black) = Just White
             | (getPS o White) < (getPS o Black) = Just Black
             | otherwise = Nothing
+
+helpPlayers :: Othello -> Brick -> (Othello, Brick)
+helpPlayers o p | 1 == length (allLMB o (Just p)) = helpPlayers no np
+                | otherwise                  = (o, p)
+            where no = snd $tryPB o (head (allLMB o (Just p))) p
+                  np = decidePlayer no p
+
+decidePlayer :: Othello -> Brick -> Brick
+decidePlayer o Black = if canPM o White
+                        then White
+                        else Black
+decidePlayer o White = if canPM o Black
+                        then Black
+                        else White
