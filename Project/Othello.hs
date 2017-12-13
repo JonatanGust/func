@@ -1,6 +1,6 @@
 module Othello where
 import Data.Maybe
-import Test.QuickCheck
+--import Test.QuickCheck
 data Brick = Black | White
     deriving (Eq)
 
@@ -11,6 +11,7 @@ instance Show Brick where
 data Othello = Othello {rows :: [[Maybe Brick]]}
     deriving (Show, Eq)
 -- | an instance for generating Arbitrary Othellos
+{-
 rBrick :: Gen (Maybe Brick)
 rBrick = do rb <- (frequency [(5,elements [Just White, Just Black]),
                                 (5, return Nothing)])
@@ -26,7 +27,7 @@ instance Arbitrary Brick where
           arbitrary =
             do rb <- elements [White, Black]
                return rb
-
+-}
 type Pos = (Int,Int)
 
 --A list of all possible Pos in an Othello
@@ -202,16 +203,15 @@ isLMB b (o, p) = length (findBF o p (Just b)) > 0
 allLMB :: Othello -> Brick -> [Pos]
 allLMB o b = map snd $filter (isLMB b) $zip (64 `replicate` o)
                 $filter (isPE o) posList
-prop_allLMB ::  Othello -> Brick -> Bool
-prop_allLMB o b = undefined
---isPosEmpty checks if the position is empty (Nothing)
-isPE :: Othello -> Pos -> Bool
-isPE o (r,c) = Nothing == ((rows o) !! r !! c)
 
 --allLegalMoves is a list of all positions where any brick can be placed (can
 --contain duplicates)
 allLM :: Othello -> [Pos]
 allLM o = (allLMB o (Black))++(allLMB o (White))
+
+--isPosEmpty checks if the position is empty (Nothing)
+isPE :: Othello -> Pos -> Bool
+isPE o (r,c) = Nothing == ((rows o) !! r !! c)
 
 --placeBrickAt(pos) places the given brick at the position and updates the
 --rest of the board acordingly
