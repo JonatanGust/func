@@ -13,14 +13,14 @@ fieldSize = brickSize * 8
 --The main function does the following:
 --Creates canvas for both game board, text fields and a button
 --Adds them to a column div in the dokument body
---ot is our state, containging the game board and active player
+--ot is our state, containing the game board and active player
 --      is initiated to the starting gameboard and with player black as first
 --We draw the default game board
 --We draw text in the bottom canvas
 --Now we add a click handler for the canvas,
 --      here we check where the click happened and try to do a move,
 --      using tryPB from the Othello module, if the move was legal we update
---      our state and also check if there is more than 1 lega lmove for the
+--      our state and also check if there is more than 1 legal lmove for the
 --      next player, if there isn't we do that move for the player (recursive)
 --      After all that we repaint the game board and text, and lastly we do
 --      a check to see if the game has ended, if so we print the winner in the
@@ -28,8 +28,8 @@ fieldSize = brickSize * 8
 --Now we add a click handler to the button (restart) that clears the current
 --      body and then reinitiates the main function.
 --In the where section we have
---  1)  renderAll wich creates pictures() (from haste) of the whole gameboard
---  2)  drawAll wich draws all the renders
+--  1)  renderAll which creates pictures() (from haste) of the whole gameboard
+--  2)  drawAll which draws all the renders
 main = do
       canvas <- (mkCanvas (fieldSize,fieldSize) "white")
       txtCanvas <- (mkCanvas (fieldSize/8,fieldSize) "white")
@@ -69,9 +69,12 @@ main = do
 -- displays the scores and the winner as the player with the most points
 renderWinner :: Othello -> Canvas -> Maybe Brick -> IO ()
 renderWinner o txtCan b = do
-       render txtCan ( scale (2,2)   (text (20,20) ("White score: "++(show (getPS o White)))))
-       renderOnTop txtCan ( scale (2,2)   (text (120,20) ("Black score: "++ (show (getPS o Black)))))
-       renderOnTop txtCan ( scale (2,2)   (text (220,20) (winner)))
+       render txtCan ( scale (2,2)
+                  (text (20,20) ("White score: "++(show (getPS o White)))))
+       renderOnTop txtCan ( scale (2,2)
+                  (text (120,20) ("Black score: "++ (show (getPS o Black)))))
+       renderOnTop txtCan ( scale (2,2)
+                  (text (220,20) (winner)))
        where winner = if b == Nothing then "It's a draw!"
                         else if b == (Just Black) then "Black won!"
                                 else "White won!"
@@ -79,9 +82,12 @@ renderWinner o txtCan b = do
 --displays the scores and who's turn it is
 renderText :: Canvas -> (Othello,Brick) -> IO ()
 renderText txtCan (o,b) = do
-    render txtCan ( scale (2,2)   (text (20,20) ("White score: "++(show (getPS o White)))))
-    renderOnTop txtCan ( scale (2,2)   (text (120,20) ("Black score: "++ (show (getPS o Black)))))
-    renderOnTop txtCan ( scale (2,2)   (text (220,20) ("It's "++(show b)++" player's turn")))
+    render txtCan ( scale (2,2)
+            (text (20,20) ("White score: "++(show (getPS o White)))))
+    renderOnTop txtCan ( scale (2,2)
+            (text (120,20) ("Black score: "++ (show (getPS o Black)))))
+    renderOnTop txtCan ( scale (2,2)
+            (text (220,20) ("It's "++(show b)++" player's turn")))
 
 --takes a brick and position and returns the equivalent picture to be drawn
 squarePicture :: (Maybe Brick, (Pos)) -> Picture ()
