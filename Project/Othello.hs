@@ -28,6 +28,7 @@ instance Arbitrary Brick where
             do rb <- elements [White, Black]
                return rb
 -}
+
 type Pos = (Int,Int)
 
 --A list of all possible Pos in an Othello
@@ -188,30 +189,29 @@ findBF' n o pA mb pC | (fst pN) < 0
                      || (snd pN) > 7
                      || (((rows o) !! (fst pN)) !! (snd pN)) == Nothing
                         = Nothing
-                   | (((rows o) !! (fst pN)) !! (snd pN)) == mb =
+                     | (((rows o) !! (fst pN)) !! (snd pN)) == mb =
                         if n > 1 then Just pN
                                  else Nothing
-                   | otherwise = findBF' (n+1) o pN mb pC
+                     | otherwise = findBF' (n+1) o pN mb pC
                    where pN = ((fst pA)+(fst pC),(snd pA)+(snd pC))
 
 --isLegalMove(for)Brick returns true if the given brick can be placed here
-isLMB :: Brick -> (Othello, Pos) -> Bool
-isLMB b (o, p) = length (findBF o p (Just b)) > 0
+isLMB :: Brick -> Othello -> Pos -> Bool
+isLMB b o p = length (findBF o p (Just b)) > 0
 
 --allLegalMoves(for)Brick returns a list of all possible moves (pos) of the
 --given brick type
 allLMB :: Othello -> Brick -> [Pos]
-allLMB o b = map snd $filter (isLMB b) $zip (64 `replicate` o)
-                $filter (isPE o) posList
+allLMB o b = filter (isLMB b o) $filter (isPE o) posList
+
+--isPosEmpty checks if the position is empty (Nothing)
+isPE :: Othello -> Pos -> Bool
+isPE o (r,c) = Nothing == ((rows o) !! r !! c)
 
 --allLegalMoves is a list of all positions where any brick can be placed (can
 --contain duplicates)
 allLM :: Othello -> [Pos]
 allLM o = (allLMB o (Black))++(allLMB o (White))
-
---isPosEmpty checks if the position is empty (Nothing)
-isPE :: Othello -> Pos -> Bool
-isPE o (r,c) = Nothing == ((rows o) !! r !! c)
 
 --placeBrickAt(pos) places the given brick at the position and updates the
 --rest of the board acordingly
